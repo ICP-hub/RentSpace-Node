@@ -22,7 +22,6 @@ module.exports = signatureVerification = async (publicKey, signature, data) => {
             fromHex(signature),
             data,
           );
-          console.log("result",result)
           return result;
     } catch (error) {
         console.log("error", error)
