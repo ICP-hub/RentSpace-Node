@@ -1,20 +1,22 @@
 const bcrypt = require("bcrypt");
-const secp256k1 = require("secp256k1");
 const { User } = require("../models/User");
 const { isValidPrincipal } = require("../helper/isValidPrincipal");
 const { fromHex } = require("@dfinity/agent");
+const signatureVerification = require("../helper/signatureVerification");
 
 module.exports = {
   async registerUser(req, res) {
     try {
       const { principal, publicKey, signature } = req.body;
 
-      // verify the signature
-      // console.log(secp256k1.ecdsaVerify(Buffer.from(signature, 'hex'), new Uint8Array(32), Buffer.from(publicKey, 'hex')));
+      let encoder = new TextEncoder();
+      let message = encoder.encode(principal);
+      let isVerified = await signatureVerification(
+        publicKey,
+        signature,
+        message
+      );
 
-      // let isVerified = secp256k1.ecdsaVerify(fromHex(signature), new Uint8Array(32), fromHex(publicKey));
-
-      let isVerified = true;
       const privateToken = await bcrypt.hash(publicKey, 10);
       const isPrincipal = isValidPrincipal(principal);
       if (!isPrincipal || !isVerified) {
