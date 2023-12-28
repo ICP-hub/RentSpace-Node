@@ -1,12 +1,12 @@
 {
-  "name": "chatting",
+  "name": "rentspace-node",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Abhishek Sharma",
+  "author": "",
   "license": "ISC",
   "dependencies": {
     "@dfinity/agent": "^0.20.2",
