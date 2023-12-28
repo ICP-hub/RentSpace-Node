@@ -20,16 +20,18 @@ module.exports = {
     try {
       const principal = req.params.principal;
       const isValid = isValidPrincipal(principal);
-      if(!isValid){
-        return res.status(401).json({ error: "Unauthorized: Invalid credentials" });
+      if (!isValid) {
+        return res
+          .status(401)
+          .json({ error: "Unauthorized: Invalid credentials" });
       }
-      const user = await User.findOne({where: {principal}});
-      if(!user){
+      const user = await User.findOne({ where: { principal } });
+      if (!user) {
         return res.status(400).json({ error: "User not found." });
       }
       const userChat = await Message.findAll({
-        where:{fromPrincipal: req.user.principal,
-        toPrincipal: principal}
+        where: { fromPrincipal: req.user.principal, toPrincipal: principal },
+        order: [["createdAt", "ASC"]],
       });
       res.json({ status: true, messages: userChat.reverse() });
     } catch (error) {
