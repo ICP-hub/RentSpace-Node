@@ -5,8 +5,8 @@ const sequelize = new Sequelize({
   host: 'localhost',
   port: '5432',
   username: 'postgres',
-  password: 'root',
-  database: 'postgres',
+  password: '141009',
+  database: 'test',
   logging: false, // Set to true to log queries
 });
 
