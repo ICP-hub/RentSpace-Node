@@ -5,18 +5,16 @@ module.exports = {
     try {
       const hotelId = req.body.hotelId;
       const hotelLocation = req.body.hotelLocation;
-      const hotelResource = req.files;
-      let hotelImagePath = [];
-      let hotelVideoPath;
-      for (const i in hotelResource) {
-        if (i.mimetype == "images/") {
-          hotelImagePath.append(i.path);
-        }
-        if (i.mimetype == "videos/") {
-          hotelVideoPath = i.path;
-        }
-      }
+      const hotelImagePath = [];
+      let hotelImage = req.files.images;
+      let hotelVideoPath = req.files.videos[0].path;
 
+      for (const i of hotelImage) {
+        hotelImagePath.push(i.path);
+      }
+      if (!req.files) {
+        res.status(400).send("No file uploaded");
+      }
       let user = await Images.findOne({ where: { hotelId } });
       if (user) {
         res.status(400).json({ staus: false, error: "Hotel Already Exist" });
