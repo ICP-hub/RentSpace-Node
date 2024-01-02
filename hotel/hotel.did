@@ -1,0 +1,43 @@
+type ScanHotels = 
+ record {
+   hotels: vec HotelInfo;
+   nextKey: opt text;
+ };
+type ScalingOptions = 
+ record {
+   autoScalingHook: AutoScalingCanisterSharedFunctionHook;
+   sizeLimit: ScalingLimitType;
+ };
+type ScalingLimitType = 
+ variant {
+   count: nat;
+   heapSize: nat;
+ };
+type HotelInfo = 
+ record {
+   createdAt: text;
+   hotelDes: text;
+   hotelImage: text;
+   hotelLocation: text;
+   hotelPrice: text;
+   hotelTitle: text;
+ };
+type Hotel = 
+ service {
+   createHotel: (HotelInfo) -> ();
+   getHotel: (text) -> (opt HotelInfo) query;
+   getHotelId: () -> (vec text) query;
+   getPK: () -> (text) query;
+   scanRent: (text, text, nat, opt bool) -> (ScanHotels) query;
+   searchLocationNode: (text) -> (vec text) query;
+   searchNameNode: (text) -> (vec text) query;
+   skExists: (text) -> (bool) query;
+   transferCycles: () -> ();
+   updateHotel: (text, HotelInfo) -> (opt HotelInfo);
+ };
+type AutoScalingCanisterSharedFunctionHook = func (text) -> (text);
+service : (record {
+             owners: opt vec principal;
+             partitonKey: text;
+             scalingOptions: ScalingOptions;
+           }) -> Hotel

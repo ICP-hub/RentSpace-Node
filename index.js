@@ -9,6 +9,7 @@ app.use(express.json());
 app.use("/api/v1", routes.userRoutes);
 app.use("/api/v1", routes.chatRoute);
 app.use("/api/v1", routes.imageRoute);
+app.use("/api/v1", routes.videoRoutes);
 
 module.exports = app;
 const server = require("./socket/index");
@@ -17,5 +18,3 @@ server.listen(PORT, async () => {
   sequelize.sync();
   console.log(`Server is running on port ${PORT}`);
 });
-
-
