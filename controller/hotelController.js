@@ -2,7 +2,7 @@ const { Hotels } = require("../models/Hotel");
 const errorMessages = require("../config/errorMessages.json");
 const successMessages = require("../config/successMessages.json");
 const fs = require("fs");
-const { hotel } = require("../motoko/hotel/index.js");
+// const { hotel } = require("../motoko/hotel/index.js");
 const { deleteFile } = require("../helper/deleteFile");
 
 module.exports = {
@@ -42,7 +42,8 @@ module.exports = {
         hotelLocation: hotelLocation,
         createdAt: createdAt,
       };
-      const hotelId = await hotel.createHotel(hotelData);
+      const hotelId = "";
+      // const hotelId = await hotel.createHotel(hotelData);
       await Hotels.create({
         hotelId: hotelId,
         hotelImagePath: hotelImagePath,
