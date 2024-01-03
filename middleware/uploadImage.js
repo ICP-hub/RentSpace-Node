@@ -1,4 +1,5 @@
 const multer = require("multer");
+
 const storageConfig = multer.diskStorage({
   destination: (req, file, cb) => {
     if (file.mimetype.startsWith("image/")) {

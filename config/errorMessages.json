@@ -1,0 +1,12 @@
+{
+    "hotelNotFound": "Hotel not found",
+    "notFound": "Not found",
+    "userNotFound": "User not found",
+    "fileNotFound": "File not found",
+    "noFileUploaded": "No file uploaded",
+    "internalServerError": "Internal Server Error",
+    "rangeRequired": "Required Range",
+    "unauthorized": "Unauthorized: Invalid credentials",
+    "userAlreadyExists": "User already exists",
+    "invalidData": "Invalid data"
+}

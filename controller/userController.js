@@ -1,7 +1,8 @@
 const bcrypt = require("bcrypt");
 const { User } = require("../models/User");
 const { isValidPrincipal } = require("../helper/isValidPrincipal");
-const { fromHex } = require("@dfinity/agent");
+const errorMessages = require("../config/errorMessages.json");
+const successMessages = require("../config/successMessages.json");
 const signatureVerification = require("../helper/signatureVerification");
 
 module.exports = {
@@ -20,7 +21,7 @@ module.exports = {
       const privateToken = await bcrypt.hash(publicKey, 10);
       const isPrincipal = isValidPrincipal(principal);
       if (!isPrincipal || !isVerified) {
-        return res.status(401).json({ status: false, error: "Unautherized" });
+        return res.status(401).json({ status: false, error: errorMessages.unauthorized });
       }
 
       let user = await User.findOne({ where: { principal } });
@@ -28,7 +29,7 @@ module.exports = {
       if (user) {
         return res
           .status(400)
-          .json({ status: false, error: "User already exist" });
+          .json({ status: false, error: errorMessages.userAlreadyExists });
       }
 
       // Create the user in the database
@@ -40,12 +41,12 @@ module.exports = {
 
       return res
         .status(201)
-        .json({ status: true, message: "User created successfully" });
+        .json({ status: true, message:  successMessages.userCreated});
     } catch (error) {
       console.error("Error:", error.message);
       return res
         .status(500)
-        .json({ status: false, error: "Internal Server Error" });
+        .json({ status: false, error: errorMessages.internalServerError });
     }
   },
 
@@ -59,12 +60,12 @@ module.exports = {
       if (!isValid) {
         return res
           .status(401)
-          .json({ status: false, error: "Unautherized access" });
+          .json({ status: false, error: errorMessages.unauthorized });
       }
 
       return res.status(201).json({
         status: true,
-        message: "User find successfully",
+        message: successMessages.userFindSuccess,
         isValid,
         userToken: userToken.privateToken,
       });
@@ -72,7 +73,7 @@ module.exports = {
       console.error("Error:", error.message);
       return res
         .status(500)
-        .json({ status: false, error: "Internal Server Error" });
+        .json({ status: false, error: errorMessages.internalServerError });
     }
   },
 };

@@ -1,12 +1,21 @@
 const { Sequelize } = require('sequelize');
 
+// const sequelize = new Sequelize({
+//   dialect: 'postgres',
+//   host: 'localhost',
+//   port: '5432',
+//   username: 'postgres',
+//   password: 'root',
+//   database: 'postgres',
+//   logging: false, // Set to true to log queries
+// });
 const sequelize = new Sequelize({
   dialect: 'postgres',
   host: 'localhost',
   port: '5432',
   username: 'postgres',
-  password: '141009',
-  database: 'test',
+  password: 'ProdWalleTServer@1234#KOLPl',
+  database: 'rentspace',
   logging: false, // Set to true to log queries
 });
 

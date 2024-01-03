@@ -1,4 +1,6 @@
 const { User } = require("../models/User");
+const errorMessages = require("../config/errorMessages.json");
+const successMessages = require("../config/successMessages.json");
 
 async function validateUser(req, res, next) {
   try {
@@ -6,7 +8,7 @@ async function validateUser(req, res, next) {
     const privateToken = req.headers["x-private-token"];
 
     if (!principal || !privateToken) {
-      return res.status(401).json({ error: "Unauthorized: Missing credentials" });
+      return res.status(401).json({ error: errorMessages.unauthorized });
     }
 
     // Check if the user with the provided principal and privateToken exists
@@ -14,16 +16,19 @@ async function validateUser(req, res, next) {
       where: { principal, privateToken },
     });
 
-    if (user) {
-      // Attach the user object to the request for later use
-      req.user = user;
-      next(); // Proceed to the next middleware or route handler
-    } else {
-      res.status(401).json({ error: "Unauthorized: Invalid credentials" });
+    if (!_.isEmpty(user)) {
+      return res
+        .status(401)
+        .json({ status: false, error: errorMessages.unauthorized });
     }
+    // Attach the user object to the request for later use
+    req.user = user;
+    next(); // Proceed to the next middleware or route handler
   } catch (error) {
     console.error("Error:", error.message);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ status: false, error: errorMessages.internalServerError });
   }
 }
 

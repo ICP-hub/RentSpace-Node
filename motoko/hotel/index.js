@@ -9,7 +9,7 @@ const { Principal } = require("@dfinity/principal");
  * process.env.CANISTER_ID_<CANISTER_NAME_UPPERCASE>
  * beginning in dfx 0.15.0
  */
-const canisterId = Principal.fromText("bw4dl-smaaa-aaaaa-qaacq-cai");
+const canisterId = Principal.fromText("ajuq4-ruaaa-aaaaa-qaaga-cai");
 
 const createActor = (canisterId, options = {}) => {
   const agent = options.agent || new HttpAgent({ ...options.agentOptions });

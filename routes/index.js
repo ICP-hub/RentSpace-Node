@@ -1,12 +1,9 @@
 const userRoutes = require("./userRoutes");
 const chatRoute = require("./chatRoutes");
-const imageRoute = require("./hotelRoutes");
-const videoRoutes = require("./videosRoutes");
+const hotelRoutes = require("./hotelRoutes");
 
 module.exports = {
   userRoutes,
   chatRoute,
-  imageRoute,
-  videoRoutes,
+  hotelRoutes,
 };
-// 

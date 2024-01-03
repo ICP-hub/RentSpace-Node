@@ -56,12 +56,7 @@ io.on("connection", (socket) => {
           if (recipientSocket) {
             io.to(recipientSocket.id).emit("receiveMessage", {
               fromPrincipal,
-              data: {
-                id: uuidv4(),
-                fromPrincipal,
-                toPrincipal,
-                message,
-              },
+              data: savedMessage,
             });
           } else {
             console.log(
