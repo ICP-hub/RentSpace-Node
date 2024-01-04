@@ -5,7 +5,7 @@ const routes = require("./routes");
 _ = require("underscore");
 
 const app = express();
-const PORT = process.env.PORT || 4040;
+const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use("/api/v1", routes.userRoutes);
