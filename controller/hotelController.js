@@ -7,6 +7,7 @@ const appConstant = require("../config/appConstant.json");
 // const { hotel } = require("../motoko/hotel/index.js");
 const { uploadFileToGCS } = require("../utils/googleCloudUpload");
 const { deleteFileFromLocal } = require("../utils/deleteFileFromLocal");
+const { Op } = require("sequelize");
 
 module.exports = {
   async createHotel(req, res) {
@@ -41,17 +42,19 @@ module.exports = {
 
       // Check if the file size is within the allowed limitx
       for (let file of req.files) {
-        if(file.mimetype.includes("video")){
-          if (!file || file.size > 200 * 1024 * 1024) {  // 200MB limit of video size
+        if (file.mimetype.includes("video")) {
+          if (!file || file.size > 200 * 1024 * 1024) {
+            // 200MB limit of video size
             return res
               .status(400)
-              .json({status: false, error: errorMessages.fileSizeTooLarge});
+              .json({ status: false, error: errorMessages.fileSizeTooLarge });
           }
         }
-        if (!file || file.size > 20 * 1024 * 1024) { // 20MB limit of image size
+        if (!file || file.size > 20 * 1024 * 1024) {
+          // 20MB limit of image size
           return res
-              .status(400)
-              .json({status: false, error: errorMessages.fileSizeTooLarge});
+            .status(400)
+            .json({ status: false, error: errorMessages.fileSizeTooLarge });
         }
       }
 
@@ -88,6 +91,8 @@ module.exports = {
       await Hotels.create({
         hotelId: hotelId,
         userPrincipal: principal,
+        hotelName: hotelTitle,
+        price: hotelPrice,
         imagesUrls: hotelImagePath,
         videoUrls: hotelVideoPath,
         location: hotelLocation,
@@ -101,6 +106,116 @@ module.exports = {
     } catch (error) {
       console.log("Error", error.message);
       deleteFileFromLocal(req.files);
+      return res
+        .status(500)
+        .json({ status: false, error: errorMessages.internalServerError });
+    }
+  },
+
+  async getHotelsReelData(req, res) {
+    try {
+      const userLatitude = req.header("latitude");
+      const userLongitude = req.header("longitude");
+      let radius = req.header("radius");
+
+      if (_.isEmpty(userLatitude) || _.isEmpty(userLongitude)) {
+        return res
+          .status(400)
+          .json({ status: false, error: errorMessages.invalidData });
+      }
+
+      if(_.isEmpty(radius)) {
+        radius = appConstant.RADIUS_IN_10_KM;
+      }
+
+      // Calculate the latitude and longitude boundaries
+      const latBoundary =
+        (Number(radius) / appConstant.EARTH_RADIUS_IN_KM) *
+        (180 / Math.PI);
+      const lonBoundary =
+        ((Number(radius) / appConstant.EARTH_RADIUS_IN_KM) *
+          (180 / Math.PI)) /
+        Math.cos((userLatitude * Math.PI) / 180);
+
+      // Find hotels within the specified 10 km radius
+      const nearbyHotels = await Hotels.findAll({
+        where: {
+          latitude: {
+            [Op.between]: [
+              +userLatitude - latBoundary,
+              +userLatitude + latBoundary,
+            ],
+          },
+          longitude: {
+            [Op.between]: [
+              +userLongitude - lonBoundary,
+              +userLongitude + lonBoundary,
+            ],
+          },
+        },
+      });
+
+      if (nearbyHotels.length > 0) {
+        // Return nearby hotels
+        return res.status(200).json({ status: true, hotels: nearbyHotels });
+      }
+      // If no nearby hotels, return the latest uploaded hotel
+      const latestHotels = await Hotels.findAll({
+        order: [["createdAt", "DESC"]],
+        limit: 10,
+      });
+
+      return res.status(200).json({ status: true, hotels: latestHotels });
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(500)
+        .json({ status: false, error: errorMessages.internalServerError });
+    }
+  },
+
+  async getHotelsFilters(req, res) {
+    try {
+      const {
+        name,
+        location,
+        minPrice,
+        maxPrice,
+        page = 1,
+        pageSize = 10,
+      } = req.query;
+
+      // Define conditions for filtering
+      const conditions = {};
+      if (name) {
+        conditions.hotelName = { [Op.iLike]: `%${name}%` }; // Case-insensitive partial match
+      }
+      if (location) {
+        conditions.location = { [Op.iLike]: `%${location}%` }; // Case-insensitive partial match
+      }
+      if (minPrice || maxPrice) {
+        conditions.price = {};
+        if (minPrice) {
+          conditions.price[Op.gte] = parseFloat(minPrice);
+        }
+        if (maxPrice) {
+          conditions.price[Op.lte] = parseFloat(maxPrice);
+        }
+      }
+
+      // Calculate offset based on pagination parameters
+      const offset = (page - 1) * pageSize;
+
+      // Query the database with the defined conditions
+      const filteredHotels = await Hotels.findAll({
+        where: conditions,
+        limit: pageSize,
+        offset,
+      });
+
+      res.json({ status: true, hotels: filteredHotels });
+    } catch (error) {
+      console.error(error);
       return res
         .status(500)
         .json({ status: false, error: errorMessages.internalServerError });

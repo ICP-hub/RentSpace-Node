@@ -1,5 +1,16 @@
 {
     "BUCKET_NAME": "rentspace",
     "TYPE_USER": "USER",
-    "TYPE_HOST": "HOST"
+    "TYPE_HOST": "HOST",
+    "RADIUS_IN_10_KM": 10,
+    "RADIUS_IN_20_KM": 20,
+    "RADIUS_IN_30_KM": 30,
+    "RADIUS_IN_40_KM": 40,
+    "RADIUS_IN_50_KM": 50,
+    "RADIUS_IN_60_KM": 60,
+    "RADIUS_IN_70_KM": 70,
+    "RADIUS_IN_80_KM": 80,
+    "RADIUS_IN_90_KM": 90,
+    "RADIUS_IN_100_KM": 100,
+    "EARTH_RADIUS_IN_KM": 6371
 }
