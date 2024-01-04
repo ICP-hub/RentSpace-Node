@@ -7,8 +7,9 @@ const errorMessages = require("../config/errorMessages.json");
 module.exports = {
   async getHistory(req, res) {
     try {
+      const { principal } = req.user;
       const chatHistory = await History.findAll({
-        where: { fromPrincipal: req.user.principal },
+        where: { fromPrincipal: principal },
       });
       return res.json({ status: true, historyUsers: chatHistory.reverse() });
     } catch (error) {
@@ -21,7 +22,7 @@ module.exports = {
 
   async getSpecificUserMessage(req, res) {
     try {
-      const principal = req.params.principal;
+      const { principal } = req.params;
       const isValid = isValidPrincipal(principal);
       if (!isValid) {
         return res.status(401).json({ error: errorMessages.unauthorized });

@@ -2,53 +2,81 @@ const { Hotels } = require("../models/Hotel");
 const errorMessages = require("../config/errorMessages.json");
 const successMessages = require("../config/successMessages.json");
 const fs = require("fs");
+const { v4 } = require("uuid");
+const appConstant = require("../config/appConstant.json");
 // const { hotel } = require("../motoko/hotel/index.js");
 const { deleteFile } = require("../helper/deleteFile");
+const { uploadFileToGCS } = require("../utils/googleCloudUpload");
 
 module.exports = {
   async createHotel(req, res) {
     try {
-      const { hotelTitle, hotelDes, hotelPrice, hotelLocation } = req.body;
+      const { principal } = req.user;
+      const {
+        hotelTitle,
+        hotelDes,
+        hotelPrice,
+        hotelLocation,
+        latitude,
+        longitude,
+      } = req.body;
       if (
         _.isEmpty(hotelTitle) ||
         _.isEmpty(hotelDes) ||
         _.isEmpty(hotelPrice) ||
-        _.isEmpty(hotelLocation)
+        _.isEmpty(hotelLocation) ||
+        _.isEmpty(latitude) ||
+        _.isEmpty(longitude)
       ) {
         return res
           .status(400)
           .json({ status: false, error: errorMessages.invalidData });
       }
-      const createdAt = "";
 
-      const hotelImagePath = [];
-      let hotelImage = req.files.images;
-      let hotelVideoPath = req.files.videos[0].path;
-
-      for (const image of hotelImage) {
-        hotelImagePath.push(image.path);
-      }
       if (!req.files) {
         return res
           .status(400)
           .json({ status: false, error: errorMessages.noFileUploaded });
       }
 
+      const createdAt = "";
+
+      const hotelImagePath = [];
+      let hotelVideoPath = [];
+      let hotelImage = req.files;
+
+      for (const image of hotelImage) {
+        let imageUrl = await uploadFileToGCS(
+          appConstant.BUCKET_NAME,
+          image.path,
+          image.originalname,
+          image.mimetype
+        );
+        if (image.mimetype.includes("video")) {
+          hotelVideoPath.push(imageUrl);
+        } else {
+          hotelImagePath.push(imageUrl);
+        }
+      }
+
       const hotelData = {
         hotelTitle: hotelTitle,
         hotelDes: hotelDes,
         hotelImage: hotelImagePath.toString(),
-        hotelPrice: hotelPrice,
+        hotelPrice: hotelPrice.toString(),
         hotelLocation: hotelLocation,
         createdAt: createdAt,
       };
-      const hotelId = "";
+      const hotelId = v4().toString();
       // const hotelId = await hotel.createHotel(hotelData);
       await Hotels.create({
         hotelId: hotelId,
-        hotelImagePath: hotelImagePath,
-        hotelVideoPath: hotelVideoPath,
-        hotelLocation: hotelLocation,
+        userPrincipal: principal,
+        imagesUrls: hotelImagePath,
+        videoUrls: hotelVideoPath,
+        location: hotelLocation,
+        latitude: latitude,
+        longitude: longitude,
       });
 
       return res
@@ -63,7 +91,7 @@ module.exports = {
     }
   },
 
-  hotelVideoStream(req, res) {
+  async hotelVideoStream(req, res) {
     try {
       const hotelId = req.body.hotelId;
 
@@ -74,14 +102,14 @@ module.exports = {
           .json({ status: false, error: errorMessages.rangeRequired });
       }
 
-      const hotelData = Hotels.findOne({ hotelId });
+      const hotelData = await Hotels.findOne({ where: { hotelId } });
       if (!hotelData) {
         return res
           .status(404)
           .json({ status: false, error: errorMessages.notFound });
       }
 
-      const videoSize = fs.statSync(hotelData.videoPath).size;
+      const videoSize = fs.statSync(hotelData.hotelVideoPath).size;
 
       const CHUNK_SIZE = 10 ** 6; //1 mb
       const start = Number(range.replace(/\D/g, ""));

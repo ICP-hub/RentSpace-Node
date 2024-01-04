@@ -9,6 +9,9 @@ const User = sequelize.define("User", {
   privateToken: {
     type: DataTypes.STRING,
   },
+  userType: {
+    type: DataTypes.STRING,
+  },
   publicToken: {
     type: DataTypes.STRING,
   },

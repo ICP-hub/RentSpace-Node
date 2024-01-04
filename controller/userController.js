@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const { User } = require("../models/User");
 const { isValidPrincipal } = require("../helper/isValidPrincipal");
 const errorMessages = require("../config/errorMessages.json");
+const appConstant = require("../config/appConstant.json");
 const successMessages = require("../config/successMessages.json");
 const signatureVerification = require("../helper/signatureVerification");
 
@@ -9,6 +10,16 @@ module.exports = {
   async registerUser(req, res) {
     try {
       const { principal, publicKey, signature } = req.body;
+
+      if (
+        _.isEmpty(publicKey) ||
+        _.isEmpty(signature) ||
+        _.isEmpty(principal)
+      ) {
+        return res
+          .status(400)
+          .send({ status: false, error: errorMessages.invalidData });
+      }
 
       let encoder = new TextEncoder();
       let message = encoder.encode(principal);
@@ -21,7 +32,9 @@ module.exports = {
       const privateToken = await bcrypt.hash(publicKey, 10);
       const isPrincipal = isValidPrincipal(principal);
       if (!isPrincipal || !isVerified) {
-        return res.status(401).json({ status: false, error: errorMessages.unauthorized });
+        return res
+          .status(401)
+          .json({ status: false, error: errorMessages.unauthorized });
       }
 
       let user = await User.findOne({ where: { principal } });
@@ -36,12 +49,13 @@ module.exports = {
       await User.create({
         principal,
         privateToken,
+        userType: appConstant.TYPE_USER,
         publicToken: publicKey,
       });
 
       return res
         .status(201)
-        .json({ status: true, message:  successMessages.userCreated});
+        .json({ status: true, message: successMessages.userCreated });
     } catch (error) {
       console.error("Error:", error.message);
       return res
@@ -53,6 +67,11 @@ module.exports = {
   async getUser(req, res) {
     try {
       const { principal, publicKey } = req.body;
+      if (_.isEmpty(publicKey) || _.isEmpty(principal)) {
+        return res
+          .status(400)
+          .send({ status: false, error: errorMessages.invalidData });
+      }
 
       // find the user in the database
       let userToken = await User.findOne({ where: { principal } });

@@ -7,7 +7,7 @@ async function validateUser(req, res, next) {
     const principal = req.headers["x-principal"];
     const privateToken = req.headers["x-private-token"];
 
-    if (!principal || !privateToken) {
+    if (_.isEmpty(principal) || _.isEmpty(privateToken)) {
       return res.status(401).json({ error: errorMessages.unauthorized });
     }
 
@@ -16,7 +16,7 @@ async function validateUser(req, res, next) {
       where: { principal, privateToken },
     });
 
-    if (!_.isEmpty(user)) {
+    if (_.isEmpty(user)) {
       return res
         .status(401)
         .json({ status: false, error: errorMessages.unauthorized });

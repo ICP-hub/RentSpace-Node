@@ -6,7 +6,7 @@ const { Sequelize } = require('sequelize');
 //   port: '5432',
 //   username: 'postgres',
 //   password: 'root',
-//   database: 'postgres',
+//   database: 'rentspace',
 //   logging: false, // Set to true to log queries
 // });
 

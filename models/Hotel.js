@@ -6,15 +6,27 @@ const Hotels = sequelize.define("Hotel", {
     type: DataTypes.STRING,
     primaryKey: true,
   },
-  hotelImagePath: {
-    type: DataTypes.ARRAY(DataTypes.STRING),
-    allowNull: false,
-  },
-  hotelVideoPath: {
+  userPrincipal: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  hotelLocation: {
+  imagesUrls: {
+    type: DataTypes.ARRAY(DataTypes.STRING),
+    allowNull: false,
+  },
+  videoUrls: {
+    type: DataTypes.ARRAY(DataTypes.STRING),
+    allowNull: false,
+  },
+  location: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  latitude: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  longitude: {
     type: DataTypes.STRING,
     allowNull: false,
   },

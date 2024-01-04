@@ -20,17 +20,26 @@ io.on("connection", (socket) => {
     try {
       const { fromPrincipal, toPrincipal, message, privateToken } =
         JSON.parse(data);
+
+      if (
+        _.isEmpty(privateToken) ||
+        _.isEmpty(fromPrincipal) ||
+        _.isEmpty(toPrincipal) ||
+        _.isEmpty(message)
+      ) {
+        return;
+      }
       const sender = await User.findOne({
         where: { principal: fromPrincipal, privateToken },
       });
 
-      if (sender) {
+      if (!_.isEmpty(sender)) {
         // Check if the recipient (toPrincipal) exists in the database
         const recipientExists = await User.findOne({
           where: { principal: toPrincipal },
         });
 
-        if (recipientExists) {
+        if (!_.isEmpty(recipientExists)) {
           let history = await History.findOrCreate({
             where: {
               fromPrincipal,
