@@ -8,5 +8,6 @@
     "rangeRequired": "Required Range",
     "unauthorized": "Unauthorized: Invalid credentials",
     "userAlreadyExists": "User already exists",
-    "invalidData": "Invalid data"
+    "invalidData": "Invalid data",
+    "fileSizeTooLarge": "File size exceeds the allowed limit."
 }

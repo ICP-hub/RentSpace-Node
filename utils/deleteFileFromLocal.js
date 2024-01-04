@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 module.exports = {
-    deleteFile (files) {
+    deleteFileFromLocal (files) {
         if (files) {
             if (files.images) {
               files.images.forEach((file) => {

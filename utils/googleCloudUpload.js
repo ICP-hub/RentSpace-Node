@@ -18,46 +18,23 @@ const stream = require("stream");
 module.exports = {
   async uploadFileToGCS(
     bucketName,
-    localFilePath,
     destinationFileName,
     contentType,
-    contents
+    contents,
+    fileObject
   ) {
     const bucket = storage.bucket(bucketName);
     try {
-      // upload image through formData file
-      if (localFilePath) {
-        const result = await bucket.upload(localFilePath, {
-          destination: destinationFileName,
-          contentType,
-          gzip: true, // this will gzip the file if it's beneficial
-          metadata: {
-            cacheControl: "public, max-age=31536000",
-          },
-        });
+      const fileExtension = contentType.split("/")[1];
+      // The new ID for your GCS file (random uuid generated)
+      const destFileName = `${destinationFileName}-${v4().toString()}.${
+        fileExtension || "jpg"
+      }`;
 
-        // console.log(result);
-        console.log(
-          `From '${localFilePath}' uploaded to '${bucketName}' as '${destinationFileName}'.`
-        );
-
-        return {
-          url: `https://storage.googleapis.com/${bucketName}/${destinationFileName}`,
-          title: destinationFileName,
-        };
-      }
-
+      // Create a reference to a file object
+      const file = bucket.file(destFileName);
       // upload image through raw image data (base64 encoded)
       if (contents) {
-        const fileExtension = contentType.split("/")[1];
-        // The new ID for your GCS file (random uuid generated)
-        const destFileName = `${destinationFileName}-${v4().toString()}.${
-          fileExtension || "jpg"
-        }`;
-
-        // Create a reference to a file object
-        const file = bucket.file(destFileName);
-
         // Create a pass through stream from a string
         const passthroughStream = new stream.PassThrough();
         passthroughStream.write(
@@ -67,37 +44,46 @@ module.exports = {
           )
         );
         passthroughStream.end();
-
-        async function streamFileUpload() {
-          return new Promise((resolve, reject) => {
-            passthroughStream
-              .pipe(
-                file.createWriteStream({
-                  gzip: true,
-                  metadata: {
-                    contentType,
-                    metadata: {
-                      custom: "metadata",
-                    },
-                  },
-                })
-              )
-              .on("finish", () => {
-                resolve({
-                  url: `https://storage.googleapis.com/${bucketName}/${destFileName}`,
-                  title: destFileName,
-                });
-              })
-              .on("error", (err) => {
-                reject(err);
-              });
-
-            // console.log(result);
-            console.log(`uploaded to '${bucketName}' as '${destFileName}'.`);
-          });
+        return await streamFileUpload(passthroughStream).catch(console.error);
+      }
+      if (fileObject) {
+        try {
+          const bufferStream = new stream.PassThrough();
+          bufferStream.write(fileObject.buffer);
+          bufferStream.end();
+          return await streamFileUpload(bufferStream).catch(console.error);
+        } catch (error) {
+          throw new Error(error);
         }
+      }
 
-        return await streamFileUpload().catch(console.error);
+      async function streamFileUpload(bufferStream) {
+        return new Promise((resolve, reject) => {
+          bufferStream
+            .pipe(
+              file.createWriteStream({
+                gzip: true,
+                metadata: {
+                  contentType,
+                  metadata: {
+                    custom: "metadata",
+                  },
+                },
+              })
+            )
+            .on("finish", () => {
+              resolve({
+                url: `https://storage.googleapis.com/${bucketName}/${destFileName}`,
+                title: destFileName,
+              });
+            })
+            .on("error", (err) => {
+              reject(err);
+            });
+
+          // console.log(result);
+          console.log(`uploaded to '${bucketName}' as '${destFileName}'.`);
+        });
       }
     } catch (error) {
       console.error("Error uploading file:", error);

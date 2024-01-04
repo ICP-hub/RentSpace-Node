@@ -11,11 +11,11 @@ const Hotels = sequelize.define("Hotel", {
     allowNull: false,
   },
   imagesUrls: {
-    type: DataTypes.ARRAY(DataTypes.STRING),
+    type: DataTypes.ARRAY(DataTypes.TEXT),
     allowNull: false,
   },
   videoUrls: {
-    type: DataTypes.ARRAY(DataTypes.STRING),
+    type: DataTypes.ARRAY(DataTypes.TEXT),
     allowNull: false,
   },
   location: {

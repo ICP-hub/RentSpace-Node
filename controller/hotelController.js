@@ -5,8 +5,8 @@ const fs = require("fs");
 const { v4 } = require("uuid");
 const appConstant = require("../config/appConstant.json");
 // const { hotel } = require("../motoko/hotel/index.js");
-const { deleteFile } = require("../helper/deleteFile");
 const { uploadFileToGCS } = require("../utils/googleCloudUpload");
+const { deleteFileFromLocal } = require("../utils/deleteFileFromLocal");
 
 module.exports = {
   async createHotel(req, res) {
@@ -39,8 +39,23 @@ module.exports = {
           .json({ status: false, error: errorMessages.noFileUploaded });
       }
 
-      const createdAt = "";
+      // Check if the file size is within the allowed limitx
+      for (let file of req.files) {
+        if(file.mimetype.includes("video")){
+          if (!file || file.size > 200 * 1024 * 1024) {  // 200MB limit of video size
+            return res
+              .status(400)
+              .json({status: false, error: errorMessages.fileSizeTooLarge});
+          }
+        }
+        if (!file || file.size > 20 * 1024 * 1024) { // 20MB limit of image size
+          return res
+              .status(400)
+              .json({status: false, error: errorMessages.fileSizeTooLarge});
+        }
+      }
 
+      const createdAt = "";
       const hotelImagePath = [];
       let hotelVideoPath = [];
       let hotelImage = req.files;
@@ -48,9 +63,10 @@ module.exports = {
       for (const image of hotelImage) {
         let imageUrl = await uploadFileToGCS(
           appConstant.BUCKET_NAME,
-          image.path,
           image.originalname,
-          image.mimetype
+          image.mimetype,
+          null,
+          image
         );
         if (image.mimetype.includes("video")) {
           hotelVideoPath.push(imageUrl);
@@ -84,7 +100,7 @@ module.exports = {
         .json({ staus: true, message: successMessages.hotelCreated });
     } catch (error) {
       console.log("Error", error.message);
-      deleteFile(req.files);
+      deleteFileFromLocal(req.files);
       return res
         .status(500)
         .json({ status: false, error: errorMessages.internalServerError });
