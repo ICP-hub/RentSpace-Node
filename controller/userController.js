@@ -9,12 +9,13 @@ const signatureVerification = require("../helper/signatureVerification");
 module.exports = {
   async registerUser(req, res) {
     try {
-      const { principal, publicKey, signature } = req.body;
+      const { principal, publicKey, signature,pubKey } = req.body;
 
       if (
         _.isEmpty(publicKey) ||
         _.isEmpty(signature) ||
-        _.isEmpty(principal)
+        _.isEmpty(principal) ||
+        _.isEmpty(pubKey) 
       ) {
         return res
           .status(400)
@@ -24,26 +25,29 @@ module.exports = {
       let encoder = new TextEncoder();
       let message = encoder.encode(principal);
       let isVerified = await signatureVerification(
-        publicKey,
+        pubKey,
         signature,
-        message
+        message,
+        publicKey
       );
 
-      const privateToken = await bcrypt.hash(publicKey, 10);
+      // check principal or signature is valid
       const isPrincipal = isValidPrincipal(principal);
       if (!isPrincipal || !isVerified) {
         return res
-          .status(401)
-          .json({ status: false, error: errorMessages.unauthorized });
+          .status(400)
+          .json({ status: false, error: errorMessages.invalidData });
       }
 
+      // if User is already exist
       let user = await User.findOne({ where: { principal } });
-
       if (user) {
         return res
           .status(400)
           .json({ status: false, error: errorMessages.userAlreadyExists });
       }
+
+      const privateToken = await bcrypt.hash(publicKey, 10);
 
       // Create the user in the database
       await User.create({
@@ -85,7 +89,6 @@ module.exports = {
       return res.status(201).json({
         status: true,
         message: successMessages.userFindSuccess,
-        isValid,
         userToken: userToken.privateToken,
       });
     } catch (error) {
