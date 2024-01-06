@@ -36,7 +36,22 @@ module.exports = {
         return res.status(400).json({ error: errorMessages.userNotFound });
       }
       const userChat = await Message.findAll({
-        where: { fromPrincipal: req.user.principal, toPrincipal: principal },
+        where: {
+          [Op.or]: [
+            {
+              [Op.and]: [
+                { fromPrincipal: { [Op.in]: [principal] } },
+                { toPrincipal: { [Op.in]: [req.user.principal] } },
+              ],
+            },
+            {
+              [Op.and]: [
+                { fromPrincipal: { [Op.in]: [req.user.principal] } },
+                { toPrincipal: { [Op.in]: [principal] } },
+              ],
+            },
+          ],
+        },
         order: [["createdAt", "ASC"]],
       });
       return res.json({ status: true, messages: userChat.reverse() });
