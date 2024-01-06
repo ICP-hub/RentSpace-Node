@@ -3,15 +3,19 @@ const History = require("../models/History");
 const { Message } = require("../models/Message");
 const { User } = require("../models/User");
 const errorMessages = require("../config/errorMessages.json");
+const { Op } = require("sequelize");
 
 module.exports = {
   async getHistory(req, res) {
     try {
       const { principal } = req.user;
       const chatHistory = await History.findAll({
-        where: { fromPrincipal: principal },
+        where: {
+          [Op.or]: [{ fromPrincipal: principal }, { toPrincipal: principal }],
+        },
+        order: [['updatedAt', 'DESC']],
       });
-      return res.json({ status: true, historyUsers: chatHistory.reverse() });
+      return res.json({ status: true, historyUsers: chatHistory });
     } catch (error) {
       console.error("Error:", error.message);
       return res

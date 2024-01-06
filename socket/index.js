@@ -6,6 +6,7 @@ const { User } = require("../models/User");
 const app = require("../index");
 const { findSocketByPrincipal } = require("./helpers/findSocket");
 const History = require("../models/History");
+const { Op } = require("sequelize");
 const server = http.createServer(app);
 const io = socketIO(server);
 
@@ -13,8 +14,11 @@ principalSocketMap = {};
 
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
-  const userPrincipal = socket.principal;
-  principalSocketMap[userPrincipal] = socket.id;
+
+  socket.on("setPrincipal", (principal) => {
+    principalSocketMap[principal] = socket.id;
+    console.log(`Socket connected for principal: ${principal}`);
+  });
 
   socket.on("sendMessage", async (data) => {
     try {
@@ -40,17 +44,62 @@ io.on("connection", (socket) => {
         });
 
         if (!_.isEmpty(recipientExists)) {
-          let history = await History.findOrCreate({
+          // Step 1: Check if the user exists
+          let existingUser = await History.findOne({
             where: {
-              fromPrincipal,
-              toPrincipal,
+              [Op.or]: [
+                {
+                  [Op.and]: [
+                    { fromPrincipal: { [Op.in]: [toPrincipal] } },
+                    { toPrincipal: { [Op.in]: [fromPrincipal] } },
+                  ],
+                },
+                {
+                  [Op.and]: [
+                    { fromPrincipal: { [Op.in]: [fromPrincipal] } },
+                    { toPrincipal: { [Op.in]: [toPrincipal] } },
+                  ],
+                },
+              ],
             },
-            defaults: {
+          });
+
+          // Step 2: If the user exists, update the data; otherwise, create a new user
+          if (existingUser) {
+            history = await History.update(
+              {
+                fromPrincipal,
+                toPrincipal,
+              },
+              {
+                where: {
+                  [Op.or]: [
+                    {
+                      [Op.and]: [
+                        { fromPrincipal: { [Op.in]: [toPrincipal] } },
+                        { toPrincipal: { [Op.in]: [fromPrincipal] } },
+                      ],
+                    },
+                    {
+                      [Op.and]: [
+                        { fromPrincipal: { [Op.in]: [fromPrincipal] } },
+                        { toPrincipal: { [Op.in]: [toPrincipal] } },
+                      ],
+                    },
+                  ],
+                },
+                returning: true, // Return the updated record
+                fields: ["fromPrincipal", "toPrincipal"],
+              }
+            );
+          } else {
+            // User does not exist, create a new user in history
+            history = await History.create({
               fromPrincipal,
               toPrincipal,
               id: uuidv4(),
-            },
-          });
+            });
+          }
 
           // Save the message to the database
           const savedMessage = await Message.create({
