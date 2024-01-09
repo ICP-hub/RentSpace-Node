@@ -8,7 +8,7 @@ async function validateUser(req, res, next) {
     const privateToken = req.headers["x-private-token"];
 
     if (_.isEmpty(principal) || _.isEmpty(privateToken)) {
-      return res.status(401).json({ error: errorMessages.unauthorized });
+      return res.status(401).json({ error: errorMessages.invalidHeaderData });
     }
 
     // Check if the user with the provided principal and privateToken exists

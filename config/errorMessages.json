@@ -9,5 +9,7 @@
     "unauthorized": "Unauthorized: Invalid credentials",
     "userAlreadyExists": "User already exists",
     "invalidData": "Invalid data",
-    "fileSizeTooLarge": "File size exceeds the allowed limit."
+    "invalidHeaderData": "Invalid header data",
+    "fileSizeTooLarge": "File size exceeds the allowed limit.",
+    "invaildDelegationData": "Invalid delegation data"
 }

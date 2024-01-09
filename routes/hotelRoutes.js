@@ -6,11 +6,14 @@ const {
   getHotelsFilters
 } = require("../controller/hotelController");
 const validateUser = require("../middleware/auth");
+const { verifyDelegation } = require("../middleware/authICPDelegation");
+const { createHotelActor } = require("../middleware/createHotelActor");
 const { multipleUpload } = require("../middleware/multer");
 
 route.post(
   "/hotel/register",
-  validateUser,
+  verifyDelegation,
+  createHotelActor,
   multipleUpload,
   createHotel
 );

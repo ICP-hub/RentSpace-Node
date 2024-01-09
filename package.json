@@ -9,7 +9,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@dfinity/agent": "^0.20.2",
+    "@dfinity/agent": "^0.18.1",
+    "@dfinity/auth-client": "^0.20.2",
+    "@dfinity/candid": "^0.20.1",
+    "@dfinity/identity": "^0.20.2",
+    "@dfinity/principal": "^0.20.1",
     "@google-cloud/storage": "^7.7.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
@@ -23,6 +27,8 @@
     "socket.io": "^4.7.2",
     "stream": "^0.0.2",
     "underscore": "^1.13.6",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "node-fetch-commonjs": "^3.3.2",
+    "buffer": "^6.0.3"
   }
 }

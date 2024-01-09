@@ -1,15 +1,15 @@
 const { Actor, HttpAgent } = require("@dfinity/agent");
+const fetch = require('node-fetch-commonjs')
 
 // Imports and re-exports candid interface
-const { idlFactory } = require("./hotel.did.js");
-const { Principal } = require("@dfinity/principal");
+const { idlFactory } = require("./backend.did.js");
 
 /* CANISTER_ID is replaced by webpack based on node environment
  * Note: canister environment variable will be standardized as
  * process.env.CANISTER_ID_<CANISTER_NAME_UPPERCASE>
  * beginning in dfx 0.15.0
  */
-const canisterId = process.env.HOTEL_CANISTER_ID;
+const canisterId =process.env.BACKEND_CANISTER_ID;
 
 const createActor = (canisterId, options = {}) => {
   const agent = options.agent || new HttpAgent({ ...options.agentOptions });
@@ -34,15 +34,16 @@ const createActor = (canisterId, options = {}) => {
   return Actor.createActor(idlFactory, {
     agent,
     canisterId,
+    blsVerify: () => true,
     ...options.actorOptions,
   });
 };
 
-const hotel = createActor(canisterId, {
+const backend = createActor(canisterId,{
   agentOptions: {
     fetchOptions: {
       reactNative: {
-        __nativeResponseType: "base64",
+        __nativeResponseType: 'base64',
       },
     },
     callOptions: {
@@ -50,8 +51,9 @@ const hotel = createActor(canisterId, {
         textStreaming: true,
       },
     },
+    fetch,
     blsVerify: () => true,
     host: process.env.ICP_HOST,
   },
 });
-module.exports = { hotel, canisterId, idlFactory, createActor };
+module.exports = {backend,canisterId,idlFactory,createActor}

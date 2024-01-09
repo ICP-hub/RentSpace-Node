@@ -9,31 +9,17 @@ const signatureVerification = require("../helper/signatureVerification");
 module.exports = {
   async registerUser(req, res) {
     try {
-      const { principal, publicKey, signature,pubKey } = req.body;
+      const { principal, publicKey } = req;
 
-      if (
-        _.isEmpty(publicKey) ||
-        _.isEmpty(signature) ||
-        _.isEmpty(principal) ||
-        _.isEmpty(pubKey) 
-      ) {
+      if (_.isEmpty(publicKey) || _.isEmpty(principal)) {
         return res
           .status(400)
           .send({ status: false, error: errorMessages.invalidData });
       }
 
-      let encoder = new TextEncoder();
-      let message = encoder.encode(principal);
-      let isVerified = await signatureVerification(
-        pubKey,
-        signature,
-        message,
-        publicKey
-      );
-
       // check principal or signature is valid
       const isPrincipal = isValidPrincipal(principal);
-      if (!isPrincipal || !isVerified) {
+      if (!isPrincipal) {
         return res
           .status(400)
           .json({ status: false, error: errorMessages.invalidData });
@@ -58,7 +44,7 @@ module.exports = {
       });
 
       return res
-        .status(201)
+        .status(200)
         .json({ status: true, message: successMessages.userCreated });
     } catch (error) {
       console.error("Error:", error.message);
@@ -70,26 +56,24 @@ module.exports = {
 
   async getUser(req, res) {
     try {
-      const { principal, publicKey } = req.body;
-      if (_.isEmpty(publicKey) || _.isEmpty(principal)) {
+      const principal = await req.principal;
+      if (_.isEmpty(principal)) {
         return res
           .status(400)
           .send({ status: false, error: errorMessages.invalidData });
       }
 
       // find the user in the database
-      let userToken = await User.findOne({ where: { principal } });
-      const isValid = await bcrypt.compare(publicKey, userToken.privateToken);
-      if (!isValid) {
+      let user = await User.findOne({ where: { principal: principal } });
+      if (_.isEmpty(user)) {
         return res
-          .status(401)
-          .json({ status: false, error: errorMessages.unauthorized });
+          .status(404)
+          .json({ status: false, error: errorMessages.userNotFound });
       }
-
       return res.status(201).json({
         status: true,
         message: successMessages.userFindSuccess,
-        userToken: userToken.privateToken,
+        userToken: user.privateToken,
       });
     } catch (error) {
       console.error("Error:", error.message);

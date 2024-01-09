@@ -4,15 +4,15 @@ const successMessages = require("../config/successMessages.json");
 const fs = require("fs");
 const { v4 } = require("uuid");
 const appConstant = require("../config/appConstant.json");
-// const { hotel } = require("../motoko/hotel/index.js");
 const { uploadFileToGCS } = require("../utils/googleCloudUpload");
 const { deleteFileFromLocal } = require("../utils/deleteFileFromLocal");
 const { Op } = require("sequelize");
+const { User } = require("../models/User");
 
 module.exports = {
   async createHotel(req, res) {
     try {
-      const { principal } = req.user;
+      const principal = req.principal;
       const {
         hotelTitle,
         hotelDes,
@@ -32,6 +32,11 @@ module.exports = {
         return res
           .status(400)
           .json({ status: false, error: errorMessages.invalidData });
+      }
+
+      let user = await User.findOne({ where: { principal: principal } });
+      if(_.isEmpty(user)){
+        return res.status(404).json({status: false, error: errorMessages.userNotFound});
       }
 
       if (!req.files) {
@@ -86,8 +91,11 @@ module.exports = {
         hotelLocation: hotelLocation,
         createdAt: createdAt,
       };
-      const hotelId = v4().toString();
-      // const hotelId = await hotel.createHotel(hotelData);
+
+      console.log("hotelData : ",hotelData);
+      // const hotelId = v4().toString();
+      const hotelId = await req.hotelCanister.createHotel(hotelData);
+      console.log("hotelId : ",hotelId);
       await Hotels.create({
         hotelId: hotelId,
         userPrincipal: principal,
