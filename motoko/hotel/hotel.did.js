@@ -1,12 +1,16 @@
 const idlFactory = ({ IDL }) => {
+  const AutoScalingCanisterSharedFunctionHook = IDL.Func(
+      [IDL.Text],
+      [IDL.Text],
+      [],
+    );
   const ScalingLimitType = IDL.Variant({
-    'heapSize' : IDL.Null,
-    'count' : IDL.Null,
+    'heapSize' : IDL.Nat,
+    'count' : IDL.Nat,
   });
   const ScalingOptions = IDL.Record({
-    'limitType' : ScalingLimitType,
-    'limit' : IDL.Nat,
-    'autoScalingCanisterId' : IDL.Text,
+    'autoScalingHook' : AutoScalingCanisterSharedFunctionHook,
+    'sizeLimit' : ScalingLimitType,
   });
   const HotelInfo = IDL.Record({
     'hotelDes' : IDL.Text,
@@ -24,7 +28,6 @@ const idlFactory = ({ IDL }) => {
     'createHotel' : IDL.Func([HotelInfo], [], []),
     'getHotel' : IDL.Func([IDL.Text], [IDL.Opt(HotelInfo)], ['query']),
     'getHotelId' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
-    'getOwner' : IDL.Func([], [IDL.Opt(IDL.Vec(IDL.Principal))], ['query']),
     'getPK' : IDL.Func([], [IDL.Text], ['query']),
     'scanRent' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Nat, IDL.Opt(IDL.Bool)],
@@ -40,19 +43,23 @@ const idlFactory = ({ IDL }) => {
   return Hotel;
 };
 const init = ({ IDL }) => {
+  const AutoScalingCanisterSharedFunctionHook = IDL.Func(
+      [IDL.Text],
+      [IDL.Text],
+      [],
+    );
   const ScalingLimitType = IDL.Variant({
-    'heapSize' : IDL.Null,
-    'count' : IDL.Null,
+    'heapSize' : IDL.Nat,
+    'count' : IDL.Nat,
   });
   const ScalingOptions = IDL.Record({
-    'limitType' : ScalingLimitType,
-    'limit' : IDL.Nat,
-    'autoScalingCanisterId' : IDL.Text,
+    'autoScalingHook' : AutoScalingCanisterSharedFunctionHook,
+    'sizeLimit' : ScalingLimitType,
   });
   return [
     IDL.Record({
       'owners' : IDL.Opt(IDL.Vec(IDL.Principal)),
-      'partitionKey' : IDL.Text,
+      'partitonKey' : IDL.Text,
       'scalingOptions' : ScalingOptions,
     }),
   ];
