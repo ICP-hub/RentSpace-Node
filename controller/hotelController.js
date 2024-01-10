@@ -21,6 +21,8 @@ module.exports = {
         latitude,
         longitude,
       } = req.body;
+      console.log("req.files",req.files)
+      console.log("req.body.files",req.body?.files)
       if (
         _.isEmpty(hotelTitle) ||
         _.isEmpty(hotelDes) ||
