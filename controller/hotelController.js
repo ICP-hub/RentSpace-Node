@@ -23,6 +23,7 @@ module.exports = {
       } = req.body;
       console.log("req.files",req.files)
       console.log("req.body.files",req.body?.files)
+      console.log("req.body.files[0]",req.body?.files?.[0])
       if (
         _.isEmpty(hotelTitle) ||
         _.isEmpty(hotelDes) ||
