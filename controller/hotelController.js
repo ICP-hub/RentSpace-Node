@@ -45,7 +45,7 @@ module.exports = {
           .json({ status: false, error: errorMessages.userNotFound });
       }
 
-      if (_.isEmpty(req.files)) {
+      if (_.isEmpty(req.files) && _.isEmpty(req.body.files)) {
         return res
           .status(400)
           .json({ status: false, error: errorMessages.noFileUploaded });
