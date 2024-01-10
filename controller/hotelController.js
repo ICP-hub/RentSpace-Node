@@ -56,7 +56,7 @@ module.exports = {
       let hotelVideoPath = [];
 
       // This code for react native calls
-      if (_.isEmpty(req.files[0].mimetype)) {
+      if (_.isEmpty(req?.files?.[0]?.mimetype)) {
         // Check if the file size is within the allowed limits
         for (let file of req.files) {
           if (file.type.includes("video")) {
@@ -94,7 +94,7 @@ module.exports = {
       }
 
       // This code for web browsers or postman
-      if (_.isEmpty(req.files[0].type)) {
+      if (_.isEmpty(req?.files?.[0]?.type)) {
         // Check if the file size is within the allowed limitx
         for (let file of req.files) {
           if (file.mimetype.includes("video")) {
