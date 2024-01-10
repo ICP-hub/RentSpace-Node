@@ -11,5 +11,6 @@
     "invalidData": "Invalid data",
     "invalidHeaderData": "Invalid header data",
     "fileSizeTooLarge": "File size exceeds the allowed limit.",
-    "invaildDelegationData": "Invalid delegation data"
+    "invaildDelegationData": "Invalid delegation data",
+    "dataTooLarge": "Data too large"
 }

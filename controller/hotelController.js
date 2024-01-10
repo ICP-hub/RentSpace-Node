@@ -34,52 +34,99 @@ module.exports = {
           .json({ status: false, error: errorMessages.invalidData });
       }
 
-      let user = await User.findOne({ where: { principal: principal } });
-      if(_.isEmpty(user)){
-        return res.status(404).json({status: false, error: errorMessages.userNotFound});
+      if(hotelDes.length > 700 || hotelTitle.length > 70){
+        return res.status(400).json({ status: false, error: errorMessages.dataTooLarge})
       }
 
-      if (!req.files) {
+      let user = await User.findOne({ where: { principal: principal } });
+      if (_.isEmpty(user)) {
+        return res
+          .status(404)
+          .json({ status: false, error: errorMessages.userNotFound });
+      }
+
+      if (_.isEmpty(req.files)) {
         return res
           .status(400)
           .json({ status: false, error: errorMessages.noFileUploaded });
       }
 
-      // Check if the file size is within the allowed limitx
-      for (let file of req.files) {
-        if (file.mimetype.includes("video")) {
-          if (!file || file.size > 200 * 1024 * 1024) {
-            // 200MB limit of video size
+      const createdAt = "";
+      const hotelImagePath = [];
+      let hotelVideoPath = [];
+
+      // This code for react native calls
+      if (_.isEmpty(req.files[0].mimetype)) {
+        // Check if the file size is within the allowed limits
+        for (let file of req.files) {
+          if (file.type.includes("video")) {
+            if (!file || file.fileSize > 200 * 1024 * 1024) {
+              // 200MB limit of video size
+              return res
+                .status(400)
+                .json({ status: false, error: errorMessages.fileSizeTooLarge });
+            }
+          }
+          if (!file || file.fileSize > 20 * 1024 * 1024) {
+            // 20MB limit of image size
             return res
               .status(400)
               .json({ status: false, error: errorMessages.fileSizeTooLarge });
           }
         }
-        if (!file || file.size > 20 * 1024 * 1024) {
-          // 20MB limit of image size
-          return res
-            .status(400)
-            .json({ status: false, error: errorMessages.fileSizeTooLarge });
+
+        let hotelFiles = req.files; // Corrected variable name
+        for (const file of hotelFiles) {
+          let imageUrl = await uploadFileToGCS(
+            appConstant.BUCKET_NAME,
+            file.fileName, // Corrected property name
+            file.type, // Corrected property name
+            null,
+            file
+          );
+          if (file.type.includes("video")) {
+            // Corrected property name
+            hotelVideoPath.push(imageUrl);
+          } else {
+            hotelImagePath.push(imageUrl);
+          }
         }
       }
 
-      const createdAt = "";
-      const hotelImagePath = [];
-      let hotelVideoPath = [];
-      let hotelImage = req.files;
+      // This code for web browsers or postman
+      if (_.isEmpty(req.files[0].type)) {
+        // Check if the file size is within the allowed limitx
+        for (let file of req.files) {
+          if (file.mimetype.includes("video")) {
+            if (!file || file.size > 200 * 1024 * 1024) {
+              // 200MB limit of video size
+              return res
+                .status(400)
+                .json({ status: false, error: errorMessages.fileSizeTooLarge });
+            }
+          }
+          if (!file || file.size > 20 * 1024 * 1024) {
+            // 20MB limit of image size
+            return res
+              .status(400)
+              .json({ status: false, error: errorMessages.fileSizeTooLarge });
+          }
+        }
+        let hotelFiles = req.files;
 
-      for (const image of hotelImage) {
-        let imageUrl = await uploadFileToGCS(
-          appConstant.BUCKET_NAME,
-          image.originalname,
-          image.mimetype,
-          null,
-          image
-        );
-        if (image.mimetype.includes("video")) {
-          hotelVideoPath.push(imageUrl);
-        } else {
-          hotelImagePath.push(imageUrl);
+        for (const file of hotelFiles) {
+          let imageUrl = await uploadFileToGCS(
+            appConstant.BUCKET_NAME,
+            file.originalname,
+            file.mimetype,
+            null,
+            file
+          );
+          if (file.mimetype.includes("video")) {
+            hotelVideoPath.push(imageUrl);
+          } else {
+            hotelImagePath.push(imageUrl);
+          }
         }
       }
 
@@ -92,10 +139,10 @@ module.exports = {
         createdAt: createdAt,
       };
 
-      console.log("hotelData : ",hotelData);
+      console.log("hotelData : ", hotelData);
       // const hotelId = v4().toString();
       const hotelId = await req.hotelCanister.createHotel(hotelData);
-      console.log("hotelId : ",hotelId);
+      console.log("hotelId : ", hotelId);
       await Hotels.create({
         hotelId: hotelId,
         userPrincipal: principal,
@@ -132,17 +179,15 @@ module.exports = {
           .json({ status: false, error: errorMessages.invalidData });
       }
 
-      if(_.isEmpty(radius)) {
+      if (_.isEmpty(radius)) {
         radius = appConstant.RADIUS_IN_10_KM;
       }
 
       // Calculate the latitude and longitude boundaries
       const latBoundary =
-        (Number(radius) / appConstant.EARTH_RADIUS_IN_KM) *
-        (180 / Math.PI);
+        (Number(radius) / appConstant.EARTH_RADIUS_IN_KM) * (180 / Math.PI);
       const lonBoundary =
-        ((Number(radius) / appConstant.EARTH_RADIUS_IN_KM) *
-          (180 / Math.PI)) /
+        ((Number(radius) / appConstant.EARTH_RADIUS_IN_KM) * (180 / Math.PI)) /
         Math.cos((userLatitude * Math.PI) / 180);
 
       // Find hotels within the specified 10 km radius
