@@ -21,7 +21,8 @@ module.exports = {
     destinationFileName,
     contentType,
     contents,
-    fileObject
+    fileObject,
+    body
   ) {
     const bucket = storage.bucket(bucketName);
     try {
@@ -39,7 +40,8 @@ module.exports = {
         const passthroughStream = new stream.PassThrough();
         passthroughStream.write(
           Buffer.from(
-            contents.replace(/^data:image\/(png|gif|jpeg);base64,/, ""),
+            // contents.replace(/^data:image\/(png|gif|jpeg);base64,/, ""),
+            contents.replace(/^data:(image\/(?:png|gif|jpeg)|video\/(?:mp4));base64,/, ""),
             "base64"
           )
         );
@@ -47,9 +49,10 @@ module.exports = {
         return await streamFileUpload(passthroughStream).catch(console.error);
       }
       if (fileObject) {
+        // console.log("fileObj : ",body?.[fileObject.fileIndex])
         try {
           const bufferStream = new stream.PassThrough();
-          bufferStream.write(fileObject.buffer);
+          bufferStream.write(body?.[fileObject.fileIndex]);
           bufferStream.end();
           return await streamFileUpload(bufferStream).catch(console.error);
         } catch (error) {

@@ -21,8 +21,8 @@ module.exports = {
         latitude,
         longitude,
       } = req.body;
-      console.log("req.files",req.files)
-      // console.log("req.body.files",req.body?.files)
+      // console.log("req.files",req.body)
+      console.log("req.body.files",JSON.parse(req.body.files))
       // console.log("req.body.files[0]",req.body?.files?.[0])
       if (
         _.isEmpty(hotelTitle) ||
@@ -61,7 +61,8 @@ module.exports = {
       // This code for react native calls
       if (_.isEmpty(req?.files?.[0]?.mimetype)) {
         // Check if the file size is within the allowed limits
-        for (let file of req.files) {
+        for (let file of JSON.parse(req.body.files)) {
+          console.log("files : ",file)
           if (file.type.includes("video")) {
             if (!file || file.fileSize > 200 * 1024 * 1024) {
               // 200MB limit of video size
@@ -78,14 +79,15 @@ module.exports = {
           }
         }
 
-        let hotelFiles = req.files; // Corrected variable name
+        let hotelFiles = JSON.parse(req.body.files); // Corrected variable name
         for (const file of hotelFiles) {
           let imageUrl = await uploadFileToGCS(
             appConstant.BUCKET_NAME,
             file.fileName, // Corrected property name
             file.type, // Corrected property name
+            file.base64,
             null,
-            file
+            req.body
           );
           if (file.type.includes("video")) {
             // Corrected property name
@@ -94,6 +96,8 @@ module.exports = {
             hotelImagePath.push(imageUrl);
           }
         }
+        console.log('uploaded videos : ',hotelVideoPath)
+        console.log('uploaded images : ',hotelImagePath)
       }
 
       // This code for web browsers or postman
@@ -123,7 +127,7 @@ module.exports = {
             file.originalname,
             file.mimetype,
             null,
-            file
+            file,
           );
           if (file.mimetype.includes("video")) {
             hotelVideoPath.push(imageUrl);
