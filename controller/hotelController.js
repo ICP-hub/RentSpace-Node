@@ -22,7 +22,7 @@ module.exports = {
         longitude,
       } = req.body;
       // console.log("req.files",req.body)
-      console.log("req.body.files",JSON.parse(req.body.files))
+      console.log("req.body.files", JSON.parse(req.body.files))
       // console.log("req.body.files[0]",req.body?.files?.[0])
       if (
         _.isEmpty(hotelTitle) ||
@@ -37,8 +37,8 @@ module.exports = {
           .json({ status: false, error: errorMessages.invalidData });
       }
 
-      if(hotelDes.length > 700 || hotelTitle.length > 70){
-        return res.status(400).json({ status: false, error: errorMessages.dataTooLarge})
+      if (hotelDes.length > 700 || hotelTitle.length > 70) {
+        return res.status(400).json({ status: false, error: errorMessages.dataTooLarge })
       }
 
       let user = await User.findOne({ where: { principal: principal } });
@@ -62,7 +62,7 @@ module.exports = {
       if (_.isEmpty(req?.files?.[0]?.mimetype)) {
         // Check if the file size is within the allowed limits
         for (let file of JSON.parse(req.body.files)) {
-          console.log("files : ",file)
+          console.log("files : ", file)
           if (file.type.includes("video")) {
             if (!file || file.fileSize > 200 * 1024 * 1024) {
               // 200MB limit of video size
@@ -96,8 +96,8 @@ module.exports = {
             hotelImagePath.push(imageUrl);
           }
         }
-        console.log('uploaded videos : ',hotelVideoPath)
-        console.log('uploaded images : ',hotelImagePath)
+        console.log('uploaded videos : ', hotelVideoPath)
+        console.log('uploaded images : ', hotelImagePath)
       }
 
       // This code for web browsers or postman
@@ -316,6 +316,58 @@ module.exports = {
       const videoStream = fs.createReadStream(videoPath, { start, end });
       videoStream.pipe(res);
     } catch (error) {
+      return res
+        .status(500)
+        .json({ status: false, message: errorMessages.internalServerError });
+    }
+  },
+
+  async updateLikesOnHotel(req, res) {
+    try {
+      const { user, hotelId } = req.body;
+
+      if (user == "" && hotelId == "" && user == undefined && hotelId == undefined) {
+        return res
+          .status(400)
+          .json({ status: false, message: errorMessages.invalidData });
+      }
+      const hotelData = await Hotels.findOne({ where: { hotelId } });
+
+      if (!hotelData) {
+        return res
+          .status(400)
+          .json({ status: false, message: errorMessages.hotelNotFound });
+      }
+
+      if (hotelData?.likedBy?.length != 0) {
+        if (hotelData?.likedBy?.includes(user)) {
+
+          const newArr = hotelData?.likedBy?.filter(item => item != user)
+          const update = await hotelData.update({ likedBy: newArr })
+          return res
+            .status(200)
+            .json({ status: true, likedremovedBy: user, message: successMessages.removeLike });
+        } else {
+          const arr = [...hotelData?.likedBy, user]
+          const update = await hotelData.update({ likedBy: arr })
+          return res
+            .status(200)
+            .json({ status: true, likedBy: user, message: successMessages.likeSuccess });
+
+        }
+      } else {
+        const arr = [...hotelData?.likedBy, user]
+        const update = await hotelData.update({ likedBy: arr })
+        return res
+          .status(200)
+          .json({ status: true, likedBy: user, message: successMessages.likeSuccess });
+
+      }
+
+
+
+    } catch (err) {
+      console.log(err)
       return res
         .status(500)
         .json({ status: false, message: errorMessages.internalServerError });

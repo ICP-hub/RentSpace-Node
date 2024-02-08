@@ -53,5 +53,9 @@ const Hotels = sequelize.define("Hotel", {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
+  likedBy: {
+    type: DataTypes.ARRAY(DataTypes.STRING),
+    defaultValue: [],
+  }
 });
 module.exports = { Hotels };
