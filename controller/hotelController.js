@@ -8,6 +8,7 @@ const { uploadFileToGCS } = require("../utils/googleCloudUpload");
 const { deleteFileFromLocal } = require("../utils/deleteFileFromLocal");
 const { Op } = require("sequelize");
 const { User } = require("../models/User");
+const axios = require('axios')
 
 module.exports = {
   async createHotel(req, res) {
@@ -267,13 +268,76 @@ module.exports = {
       const offset = (page - 1) * pageSize;
 
       // Query the database with the defined conditions
-      const filteredHotels = await Hotels.findAll({
+      const filteredHotelsDB = await Hotels.findAll({
         where: conditions,
         limit: pageSize,
-        offset,
+        offset: offset,
       });
 
-      res.json({ status: true, hotels: filteredHotels });
+
+      let response
+      const options = {
+        method: 'GET',
+        url: 'https://booking-com13.p.rapidapi.com/stays/properties/list-v2',
+        params: {
+          location: 'France',
+          checkin_date: '2024-02-09',
+          checkout_date: '2024-02-10',
+          language_code: 'en-us',
+          currency_code: 'USD'
+        },
+        headers: {
+          'X-RapidAPI-Key': '4c950a4ca5msh959e74b886a4c78p1c992bjsnd97091aca10c',
+          'X-RapidAPI-Host': 'booking-com13.p.rapidapi.com'
+        }
+      };
+
+
+      try {
+        response = await axios.request(options);
+      } catch (error) {
+        console.error(error);
+      }
+
+
+      const hotelsFromAPI = []
+      console.log(response)
+      const data = response.data?.data?.length
+
+      for (let i = 0; i < data; i++) {
+
+        if (hotelsFromAPI && Array.isArray(hotelsFromAPI)) {
+          hotelsFromAPI.push({
+            idDetail: response.data?.data[i]?.idDetail,
+            hotelName: response.data?.data[i]?.displayName?.text,
+            location: response.data?.data[i]?.basicPropertyData.location?.address + ", " + response.data?.data[i]?.basicPropertyData.location?.city,
+            price: response.data?.data[i]?.priceDisplayInfoIrene?.displayPrice?.amountPerStay?.amountRounded.replace("$", "").replace(",", ""),
+            priceCurrency: response.data?.data[i]?.priceDisplayInfoIrene?.displayPrice?.amountPerStay?.currency
+          })
+        }
+
+      }
+
+      const filteredHotelsAPI = hotelsFromAPI.filter(item => {
+        if (minPrice && minPrice != "" && !maxPrice) {
+
+          return parseInt(item.price) >= parseInt(minPrice)
+        } if (maxPrice && maxPrice != "" && !minPrice) {
+
+          return parseInt(item.price) <= parseInt(maxPrice)
+        } if (maxPrice && minPrice && maxPrice != "" && minPrice != "") {
+
+          return parseInt(item.price) <= parseInt(maxPrice) && parseInt(item.price) >= parseInt(minPrice)
+        } if (name && name != "" && !location) {
+          return item.hotelName == name
+        } if (location && location != "" && !name) {
+          return item.location == location
+        } if (name && location && name != "" && location != "") {
+          return item.hotelName == name && item.location == location
+        }
+      })
+
+      res.json({ status: true, hotels: [...filteredHotelsDB, ...filteredHotelsAPI] });
     } catch (error) {
       console.error(error);
       return res
@@ -373,4 +437,21 @@ module.exports = {
         .json({ status: false, message: errorMessages.internalServerError });
     }
   },
+
+  async getLikesOnHotel(req, res) {
+
+    const hotelId = req.query.hotelId
+    console.log(hotelId)
+
+    const hotelData = await Hotels.findOne({ where: { hotelId } });
+
+    if (!hotelData) {
+      return res
+        .status(400)
+        .json({ status: false, message: errorMessages.hotelNotFound });
+    }
+
+    res.json({status: true, numberOfLikes: hotelData.likedBy?.length})
+
+  }
 };

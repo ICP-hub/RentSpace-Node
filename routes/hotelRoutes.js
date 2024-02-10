@@ -4,7 +4,8 @@ const {
   hotelVideoStream,
   getHotelsReelData,
   getHotelsFilters,
-  updateLikesOnHotel
+  updateLikesOnHotel,
+  getLikesOnHotel
 } = require("../controller/hotelController");
 const validateUser = require("../middleware/auth");
 const { verifyDelegation } = require("../middleware/authICPDelegation");
@@ -22,5 +23,6 @@ route.post("/hotel/video/stream", hotelVideoStream);
 route.get("/hotel/reel/video", getHotelsReelData);
 route.get("/hotel/filters", getHotelsFilters);
 route.patch("/updateLikesOnHotel", updateLikesOnHotel)
+route.get("/hotel/getLikes", getLikesOnHotel)
 
 module.exports = route;
