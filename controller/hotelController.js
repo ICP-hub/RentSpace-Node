@@ -8,6 +8,7 @@ const { uploadFileToGCS } = require("../utils/googleCloudUpload");
 const { deleteFileFromLocal } = require("../utils/deleteFileFromLocal");
 const { Op } = require("sequelize");
 const { User } = require("../models/User");
+const axios = require('axios')
 
 module.exports = {
   async createHotel(req, res) {
@@ -22,7 +23,7 @@ module.exports = {
         longitude,
       } = req.body;
       // console.log("req.files",req.body)
-      console.log("req.body.files",JSON.parse(req.body.files))
+      console.log("req.body.files", JSON.parse(req.body.files))
       // console.log("req.body.files[0]",req.body?.files?.[0])
       if (
         _.isEmpty(hotelTitle) ||
@@ -37,8 +38,8 @@ module.exports = {
           .json({ status: false, error: errorMessages.invalidData });
       }
 
-      if(hotelDes.length > 700 || hotelTitle.length > 70){
-        return res.status(400).json({ status: false, error: errorMessages.dataTooLarge})
+      if (hotelDes.length > 700 || hotelTitle.length > 70) {
+        return res.status(400).json({ status: false, error: errorMessages.dataTooLarge })
       }
 
       let user = await User.findOne({ where: { principal: principal } });
@@ -62,7 +63,7 @@ module.exports = {
       if (_.isEmpty(req?.files?.[0]?.mimetype)) {
         // Check if the file size is within the allowed limits
         for (let file of JSON.parse(req.body.files)) {
-          console.log("files : ",file)
+          console.log("files : ", file)
           if (file.type.includes("video")) {
             if (!file || file.fileSize > 200 * 1024 * 1024) {
               // 200MB limit of video size
@@ -96,8 +97,8 @@ module.exports = {
             hotelImagePath.push(imageUrl);
           }
         }
-        console.log('uploaded videos : ',hotelVideoPath)
-        console.log('uploaded images : ',hotelImagePath)
+        console.log('uploaded videos : ', hotelVideoPath)
+        console.log('uploaded images : ', hotelImagePath)
       }
 
       // This code for web browsers or postman
@@ -267,13 +268,76 @@ module.exports = {
       const offset = (page - 1) * pageSize;
 
       // Query the database with the defined conditions
-      const filteredHotels = await Hotels.findAll({
+      const filteredHotelsDB = await Hotels.findAll({
         where: conditions,
         limit: pageSize,
-        offset,
+        offset: offset,
       });
 
-      res.json({ status: true, hotels: filteredHotels });
+
+      let response
+      const options = {
+        method: 'GET',
+        url: 'https://booking-com13.p.rapidapi.com/stays/properties/list-v2',
+        params: {
+          location: 'France',
+          checkin_date: '2024-02-09',
+          checkout_date: '2024-02-10',
+          language_code: 'en-us',
+          currency_code: 'USD'
+        },
+        headers: {
+          'X-RapidAPI-Key': '4c950a4ca5msh959e74b886a4c78p1c992bjsnd97091aca10c',
+          'X-RapidAPI-Host': 'booking-com13.p.rapidapi.com'
+        }
+      };
+
+
+      try {
+        response = await axios.request(options);
+      } catch (error) {
+        console.error(error);
+      }
+
+
+      const hotelsFromAPI = []
+      console.log(response)
+      const data = response.data?.data?.length
+
+      for (let i = 0; i < data; i++) {
+
+        if (hotelsFromAPI && Array.isArray(hotelsFromAPI)) {
+          hotelsFromAPI.push({
+            idDetail: response.data?.data[i]?.idDetail,
+            hotelName: response.data?.data[i]?.displayName?.text,
+            location: response.data?.data[i]?.basicPropertyData.location?.address + ", " + response.data?.data[i]?.basicPropertyData.location?.city,
+            price: response.data?.data[i]?.priceDisplayInfoIrene?.displayPrice?.amountPerStay?.amountRounded.replace("$", "").replace(",", ""),
+            priceCurrency: response.data?.data[i]?.priceDisplayInfoIrene?.displayPrice?.amountPerStay?.currency
+          })
+        }
+
+      }
+
+      const filteredHotelsAPI = hotelsFromAPI.filter(item => {
+        if (minPrice && minPrice != "" && !maxPrice) {
+
+          return parseInt(item.price) >= parseInt(minPrice)
+        } if (maxPrice && maxPrice != "" && !minPrice) {
+
+          return parseInt(item.price) <= parseInt(maxPrice)
+        } if (maxPrice && minPrice && maxPrice != "" && minPrice != "") {
+
+          return parseInt(item.price) <= parseInt(maxPrice) && parseInt(item.price) >= parseInt(minPrice)
+        } if (name && name != "" && !location) {
+          return item.hotelName == name
+        } if (location && location != "" && !name) {
+          return item.location == location
+        } if (name && location && name != "" && location != "") {
+          return item.hotelName == name && item.location == location
+        }
+      })
+
+      res.json({ status: true, hotels: [...filteredHotelsDB, ...filteredHotelsAPI] });
     } catch (error) {
       console.error(error);
       return res
@@ -321,4 +385,73 @@ module.exports = {
         .json({ status: false, message: errorMessages.internalServerError });
     }
   },
+
+  async updateLikesOnHotel(req, res) {
+    try {
+      const { user, hotelId } = req.body;
+
+      if (user == "" && hotelId == "" && user == undefined && hotelId == undefined) {
+        return res
+          .status(400)
+          .json({ status: false, message: errorMessages.invalidData });
+      }
+      const hotelData = await Hotels.findOne({ where: { hotelId } });
+
+      if (!hotelData) {
+        return res
+          .status(400)
+          .json({ status: false, message: errorMessages.hotelNotFound });
+      }
+
+      if (hotelData?.likedBy?.length != 0) {
+        if (hotelData?.likedBy?.includes(user)) {
+
+          const newArr = hotelData?.likedBy?.filter(item => item != user)
+          const update = await hotelData.update({ likedBy: newArr })
+          return res
+            .status(200)
+            .json({ status: true, likedremovedBy: user, message: successMessages.removeLike });
+        } else {
+          const arr = [...hotelData?.likedBy, user]
+          const update = await hotelData.update({ likedBy: arr })
+          return res
+            .status(200)
+            .json({ status: true, likedBy: user, message: successMessages.likeSuccess });
+
+        }
+      } else {
+        const arr = [...hotelData?.likedBy, user]
+        const update = await hotelData.update({ likedBy: arr })
+        return res
+          .status(200)
+          .json({ status: true, likedBy: user, message: successMessages.likeSuccess });
+
+      }
+
+
+
+    } catch (err) {
+      console.log(err)
+      return res
+        .status(500)
+        .json({ status: false, message: errorMessages.internalServerError });
+    }
+  },
+
+  async getLikesOnHotel(req, res) {
+
+    const hotelId = req.query.hotelId
+    console.log(hotelId)
+
+    const hotelData = await Hotels.findOne({ where: { hotelId } });
+
+    if (!hotelData) {
+      return res
+        .status(400)
+        .json({ status: false, message: errorMessages.hotelNotFound });
+    }
+
+    res.json({status: true, numberOfLikes: hotelData.likedBy?.length})
+
+  }
 };
