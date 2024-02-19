@@ -9,6 +9,7 @@ const History = require("../models/History");
 const { Op } = require("sequelize");
 const server = http.createServer(app);
 const io = socketIO(server);
+const crypto = require('crypto')
 
 principalSocketMap = {};
 
@@ -101,12 +102,25 @@ io.on("connection", (socket) => {
             });
           }
 
+
+          const algo = 'aes256'
+          const key = crypto.randomBytes(32); // Generate a random key with a length of 256 bits (32 bytes)
+          const iv = crypto.randomBytes(16); // Generate a random IV
+          const cipher = crypto.createCipheriv(algo, key, iv)
+          const encrypted = cipher.update(message, 'utf-8', 'hex') + cipher.final('hex')
+
+          const decipher = crypto.createDecipheriv(algo, key, iv)
+          const decrypted = decipher.update(encrypted, 'hex', 'utf-8') + decipher.final('utf-8')
+
+          console.log("Encrypted Message: ", encrypted)
+          console.log("Decrypted Message: ", decrypted)
+
           // Save the message to the database
           const savedMessage = await Message.create({
             id: uuidv4(),
             fromPrincipal,
             toPrincipal,
-            message,
+            message: encrypted,
           });
 
           // Send the message to the recipient
@@ -126,7 +140,7 @@ io.on("connection", (socket) => {
             `Recipient with principal ${toPrincipal} does not exist.`
           );
         }
-      } else {
+       } else {
         console.log(`Invalid private token for principal ${fromPrincipal}`);
       }
     } catch (error) {
