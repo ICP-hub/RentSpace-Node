@@ -4,6 +4,7 @@ const { Message } = require("../models/Message");
 const { User } = require("../models/User");
 const errorMessages = require("../config/errorMessages.json");
 const { Op } = require("sequelize");
+const crypto = require("crypto")
 
 module.exports = {
   async getHistory(req, res) {
@@ -54,7 +55,31 @@ module.exports = {
         },
         order: [["createdAt", "ASC"]],
       });
-      return res.json({ status: true, messages: userChat.reverse() });
+      let chatHistoryEncrypted = []
+
+      userChat.map(msg => chatHistoryEncrypted.push(msg.toJSON()))
+
+
+      let chatHistoryDecrypted = []
+      chatHistoryEncrypted.map(msg => {
+
+        const algo = 'aes256'
+        const key = Buffer.from("6d792d7365637265742d6b65792d6b6579123489272b72d27287a2727a272738", "hex")
+
+        const decipher = crypto.createDecipheriv(algo, key, msg.iv)
+        const decrypted = decipher.update(msg.message, 'hex', 'utf-8') + decipher.final('utf-8')
+
+        chatHistoryDecrypted.push({
+          id: msg.id,
+          fromPrincipal: msg.fromPrincipal,
+          toPrincipal: msg.toPrincipal,
+          message: decrypted,
+          createdAt: msg.createdAt,
+          updatedAt: msg.updatedAt
+        })
+      })
+
+      return res.json({ status: true, messages: chatHistoryDecrypted });
     } catch (error) {
       console.error("Error:", error.message);
       return res

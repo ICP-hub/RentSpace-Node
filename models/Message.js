@@ -18,6 +18,10 @@ const Message = sequelize.define("Message", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  iv: {
+    type: DataTypes.BLOB,
+    allowNull: false
+  }
 });
 
 module.exports = { Message };
