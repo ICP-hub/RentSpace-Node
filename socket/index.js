@@ -104,8 +104,9 @@ io.on("connection", (socket) => {
 
 
           const algo = 'aes256'
-          const key = crypto.randomBytes(32); // Generate a random key with a length of 256 bits (32 bytes)
-          const iv = crypto.randomBytes(16); // Generate a random IV
+          const key = Buffer.from("6d792d7365637265742d6b65792d6b6579123489272b72d27287a2727a272738", "hex") 
+          const iv = crypto.randomBytes(16)
+          console.log(iv)
           const cipher = crypto.createCipheriv(algo, key, iv)
           const encrypted = cipher.update(message, 'utf-8', 'hex') + cipher.final('hex')
 
@@ -121,6 +122,7 @@ io.on("connection", (socket) => {
             fromPrincipal,
             toPrincipal,
             message: encrypted,
+            iv: iv
           });
 
           // Send the message to the recipient
@@ -140,7 +142,7 @@ io.on("connection", (socket) => {
             `Recipient with principal ${toPrincipal} does not exist.`
           );
         }
-       } else {
+      } else {
         console.log(`Invalid private token for principal ${fromPrincipal}`);
       }
     } catch (error) {
