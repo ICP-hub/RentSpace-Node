@@ -1,4 +1,4 @@
-const idlFactory = ({ IDL }) => {
+export const idlFactory = ({ IDL }) => {
   const HotelInfo = IDL.Record({
     'hotelDes' : IDL.Text,
     'createdAt' : IDL.Text,
@@ -7,28 +7,40 @@ const idlFactory = ({ IDL }) => {
     'hotelTitle' : IDL.Text,
     'hotelLocation' : IDL.Text,
   });
-  const ScanHotels = IDL.Record({
-    'nextKey' : IDL.Opt(IDL.Text),
-    'hotels' : IDL.Vec(HotelInfo),
+  const HotelId = IDL.Text;
+  const AnnualData = IDL.Record({
+    'aug' : IDL.Nat,
+    'dec' : IDL.Nat,
+    'feb' : IDL.Nat,
+    'jan' : IDL.Nat,
+    'may' : IDL.Nat,
+    'nov' : IDL.Nat,
+    'oct' : IDL.Nat,
+    'sep' : IDL.Nat,
+    'march' : IDL.Nat,
+    'april' : IDL.Nat,
+    'july' : IDL.Nat,
+    'june' : IDL.Nat,
   });
-  return IDL.Service({
-    'createHotel' : IDL.Func([HotelInfo], [IDL.Text], []),
-    'getHotel' : IDL.Func([IDL.Text], [IDL.Opt(HotelInfo)], ['query']),
-    'getHotelId' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
-    'getOwner' : IDL.Func([], [IDL.Opt(IDL.Vec(IDL.Principal))], ['query']),
-    'getPK' : IDL.Func([], [IDL.Text], ['query']),
-    'scanRent' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Nat, IDL.Opt(IDL.Bool)],
-        [ScanHotels],
+  const anon_class_16_1 = IDL.Service({
+    'addOwner' : IDL.Func([IDL.Text], [IDL.Text], []),
+    'createHotel' : IDL.Func([HotelInfo], [], []),
+    'deleteHotel' : IDL.Func([HotelId], [IDL.Text], []),
+    'getHotel' : IDL.Func([HotelId], [IDL.Opt(HotelInfo)], ['query']),
+    'getHotelFrequencyByYear' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(AnnualData)],
         ['query'],
       ),
-    'searchLocationNode' : IDL.Func([IDL.Text], [IDL.Vec(IDL.Text)], ['query']),
-    'searchNameNode' : IDL.Func([IDL.Text], [IDL.Vec(IDL.Text)], ['query']),
-    'skExists' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
-    'transferCycles' : IDL.Func([], [], []),
-    'updateHotel' : IDL.Func([IDL.Text, HotelInfo], [IDL.Opt(HotelInfo)], []),
+    'getHotelId' : IDL.Func([], [IDL.Vec(HotelId)], ['query']),
+    'scanHotel' : IDL.Func(
+        [IDL.Nat, IDL.Nat],
+        [IDL.Vec(IDL.Tuple(HotelId, HotelInfo))],
+        ['query'],
+      ),
+    'updateHotel' : IDL.Func([HotelId, HotelInfo], [IDL.Opt(HotelInfo)], []),
+    'whoami' : IDL.Func([], [IDL.Text], ['query']),
   });
+  return anon_class_16_1;
 };
-const init = ({ IDL }) => { return []; };
-
-module.exports = {idlFactory,init};
+export const init = ({ IDL }) => { return []; };

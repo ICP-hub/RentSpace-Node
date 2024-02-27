@@ -1,17 +1,17 @@
-type ScanHotels = 
- record {
-   hotels: vec HotelInfo;
-   nextKey: opt text;
- };
-type ScalingOptions = 
- record {
-   autoScalingHook: AutoScalingCanisterSharedFunctionHook;
-   sizeLimit: ScalingLimitType;
- };
-type ScalingLimitType = 
- variant {
-   count: nat;
-   heapSize: nat;
+type anon_class_16_1 = 
+ service {
+   addOwner: (text) -> (text);
+   createHotel: (HotelInfo) -> ();
+   deleteHotel: (HotelId) -> (text);
+   getHotel: (HotelId) -> (opt HotelInfo) query;
+   getHotelFrequencyByYear: (text) -> (opt AnnualData) query;
+   getHotelId: () -> (vec HotelId) query;
+   scanHotel: (nat, nat) -> (vec record {
+                                   HotelId;
+                                   HotelInfo;
+                                 }) query;
+   updateHotel: (HotelId, HotelInfo) -> (opt HotelInfo);
+   whoami: () -> (text) query;
  };
 type HotelInfo = 
  record {
@@ -22,22 +22,20 @@ type HotelInfo =
    hotelPrice: text;
    hotelTitle: text;
  };
-type Hotel = 
- service {
-   createHotel: (HotelInfo) -> ();
-   getHotel: (text) -> (opt HotelInfo) query;
-   getHotelId: () -> (vec text) query;
-   getPK: () -> (text) query;
-   scanRent: (text, text, nat, opt bool) -> (ScanHotels) query;
-   searchLocationNode: (text) -> (vec text) query;
-   searchNameNode: (text) -> (vec text) query;
-   skExists: (text) -> (bool) query;
-   transferCycles: () -> ();
-   updateHotel: (text, HotelInfo) -> (opt HotelInfo);
+type HotelId = text;
+type AnnualData = 
+ record {
+   april: nat;
+   aug: nat;
+   dec: nat;
+   feb: nat;
+   jan: nat;
+   july: nat;
+   june: nat;
+   march: nat;
+   may: nat;
+   nov: nat;
+   oct: nat;
+   sep: nat;
  };
-type AutoScalingCanisterSharedFunctionHook = func (text) -> (text);
-service : (record {
-             owners: opt vec principal;
-             partitonKey: text;
-             scalingOptions: ScalingOptions;
-           }) -> Hotel
+service : () -> anon_class_16_1

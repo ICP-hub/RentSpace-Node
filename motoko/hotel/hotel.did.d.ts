@@ -1,25 +1,21 @@
 import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 
-export type AutoScalingCanisterSharedFunctionHook = ActorMethod<
-  [string],
-  string
->;
-export interface Hotel {
-  'createHotel' : ActorMethod<[HotelInfo], string>,
-  'getHotel' : ActorMethod<[string], [] | [HotelInfo]>,
-  'getHotelId' : ActorMethod<[], Array<string>>,
-  'getPK' : ActorMethod<[], string>,
-  'scanRent' : ActorMethod<
-    [string, string, bigint, [] | [boolean]],
-    ScanHotels
-  >,
-  'searchLocationNode' : ActorMethod<[string], Array<string>>,
-  'searchNameNode' : ActorMethod<[string], Array<string>>,
-  'skExists' : ActorMethod<[string], boolean>,
-  'transferCycles' : ActorMethod<[], undefined>,
-  'updateHotel' : ActorMethod<[string, HotelInfo], [] | [HotelInfo]>,
+export interface AnnualData {
+  'aug' : bigint,
+  'dec' : bigint,
+  'feb' : bigint,
+  'jan' : bigint,
+  'may' : bigint,
+  'nov' : bigint,
+  'oct' : bigint,
+  'sep' : bigint,
+  'march' : bigint,
+  'april' : bigint,
+  'july' : bigint,
+  'june' : bigint,
 }
+export type HotelId = string;
 export interface HotelInfo {
   'hotelDes' : string,
   'createdAt' : string,
@@ -28,14 +24,15 @@ export interface HotelInfo {
   'hotelTitle' : string,
   'hotelLocation' : string,
 }
-export type ScalingLimitType = { 'heapSize' : bigint } |
-  { 'count' : bigint };
-export interface ScalingOptions {
-  'autoScalingHook' : AutoScalingCanisterSharedFunctionHook,
-  'sizeLimit' : ScalingLimitType,
+export interface anon_class_16_1 {
+  'addOwner' : ActorMethod<[string], string>,
+  'createHotel' : ActorMethod<[HotelInfo], undefined>,
+  'deleteHotel' : ActorMethod<[HotelId], string>,
+  'getHotel' : ActorMethod<[HotelId], [] | [HotelInfo]>,
+  'getHotelFrequencyByYear' : ActorMethod<[string], [] | [AnnualData]>,
+  'getHotelId' : ActorMethod<[], Array<HotelId>>,
+  'scanHotel' : ActorMethod<[bigint, bigint], Array<[HotelId, HotelInfo]>>,
+  'updateHotel' : ActorMethod<[HotelId, HotelInfo], [] | [HotelInfo]>,
+  'whoami' : ActorMethod<[], string>,
 }
-export interface ScanHotels {
-  'nextKey' : [] | [string],
-  'hotels' : Array<HotelInfo>,
-}
-export interface _SERVICE extends Hotel {}
+export interface _SERVICE extends anon_class_16_1 {}
