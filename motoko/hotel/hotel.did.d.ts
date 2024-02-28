@@ -26,7 +26,7 @@ export interface HotelInfo {
 }
 export interface anon_class_16_1 {
   'addOwner' : ActorMethod<[string], string>,
-  'createHotel' : ActorMethod<[HotelInfo], undefined>,
+  'createHotel' : ActorMethod<[HotelInfo], HotelId>,
   'deleteHotel' : ActorMethod<[HotelId], string>,
   'getHotel' : ActorMethod<[HotelId], [] | [HotelInfo]>,
   'getHotelFrequencyByYear' : ActorMethod<[string], [] | [AnnualData]>,

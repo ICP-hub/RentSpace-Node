@@ -1,7 +1,7 @@
 type anon_class_16_1 = 
  service {
    addOwner: (text) -> (text);
-   createHotel: (HotelInfo) -> ();
+   createHotel: (HotelInfo) -> (HotelId);
    deleteHotel: (HotelId) -> (text);
    getHotel: (HotelId) -> (opt HotelInfo) query;
    getHotelFrequencyByYear: (text) -> (opt AnnualData) query;
