@@ -21,6 +21,8 @@ module.exports = {
         hotelLocation,
         latitude,
         longitude,
+        amenities,
+        propertyType
       } = req.body;
       // console.log("req.files",req.body)
       console.log("req.body.files", JSON.parse(req.body.files))
@@ -161,6 +163,8 @@ module.exports = {
         location: hotelLocation,
         latitude: latitude,
         longitude: longitude,
+        amenities:amenities,
+        propertyType:propertyType
       });
 
       return res
@@ -244,6 +248,8 @@ module.exports = {
         maxPrice,
         page = 1,
         pageSize = 10,
+        amenities,
+        propertyType
       } = req.query;
 
       // Define conditions for filtering
@@ -262,6 +268,14 @@ module.exports = {
         if (maxPrice) {
           conditions.price[Op.lte] = parseFloat(maxPrice);
         }
+      }
+      if(propertyType){
+        conditions.propertyType=propertyType
+      }
+      if(amenities && amenities.length>0){
+        conditions.amenities={
+          [Op.overlap]:amenities
+        };
       }
 
       // Calculate offset based on pagination parameters

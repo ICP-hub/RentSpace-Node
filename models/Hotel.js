@@ -1,4 +1,4 @@
-const { DataTypes } = require("sequelize");
+const { DataTypes, ARRAY } = require("sequelize");
 const sequelize = require("../database"); // Ensure to configure the connection in this file
 
 const Hotels = sequelize.define("Hotel", {
@@ -56,6 +56,30 @@ const Hotels = sequelize.define("Hotel", {
   likedBy: {
     type: DataTypes.ARRAY(DataTypes.STRING),
     defaultValue: [],
-  }
+  },
+  amenities:{
+    type:DataTypes.ARRAY(DataTypes.ENUM(
+      "wifi",
+      "gym",
+      "tv",
+      "laundry",
+      "parking",
+      "medication",
+      "gaming",
+      "dining"
+    )),
+    defaultValue:[],
+  },
+  propertyType:{
+    type:DataTypes.ENUM(
+      "House",
+      "Guest House",
+      "Flat",
+      "Hotel",
+      "Resort",
+      "Palace"
+    )
+  },
+  defaultValue:"Hotel"
 });
 module.exports = { Hotels };
