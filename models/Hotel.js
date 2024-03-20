@@ -78,8 +78,8 @@ const Hotels = sequelize.define("Hotel", {
       "Hotel",
       "Resort",
       "Palace"
-    )
+    ),
+    defaultValue:"Hotel",
   },
-  defaultValue:"Hotel"
 });
 module.exports = { Hotels };
