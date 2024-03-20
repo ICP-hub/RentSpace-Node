@@ -269,10 +269,11 @@ module.exports = {
           conditions.price[Op.lte] = parseFloat(maxPrice);
         }
       }
+      console.log("amenities : ",amenities)
       if(propertyType){
-        conditions.propertyType=propertyType
+        conditions.propertyType={ [Op.iLike]: `%${propertyType}%` };
       }
-      if(amenities && amenities.length>0){
+      if(amenities && amenities.length>0 && Array.isArray(amenities)){
         conditions.amenities={
           [Op.overlap]:amenities
         };
