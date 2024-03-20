@@ -273,9 +273,10 @@ module.exports = {
       if(propertyType){
         conditions.propertyType=propertyType
       }
-      if(amenities && amenities.length>0 && Array.isArray(amenities)){
-        conditions.amenities={
-          [Op.overlap]:amenities
+      if(amenities && amenities.length>0){
+        const requestedAmenities = amenities.split(','); 
+        conditions.amenities = {
+          [Op.overlap]: requestedAmenities
         };
       }
 
