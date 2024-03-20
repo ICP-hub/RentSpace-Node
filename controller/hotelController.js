@@ -271,7 +271,7 @@ module.exports = {
       }
       console.log("amenities : ",amenities,Array.isArray(amenities))
       if(propertyType){
-        conditions.propertyType={ [Op.iLike]: `%${propertyType}%` };
+        conditions.propertyType=propertyType
       }
       if(amenities && amenities.length>0 && Array.isArray(amenities)){
         conditions.amenities={
