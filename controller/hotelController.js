@@ -269,15 +269,15 @@ module.exports = {
           conditions.price[Op.lte] = parseFloat(maxPrice);
         }
       }
-      console.log("amenities : ",amenities,Array.isArray(amenities))
       if(propertyType){
         conditions.propertyType=propertyType
       }
       if(amenities && amenities.length>0){
         const requestedAmenities = amenities.split(','); 
-        conditions.amenities = {
-          [Op.overlap]: requestedAmenities
-        };
+        console.log("req amen : ",requestedAmenities)
+        // conditions.amenities = {
+        //   [Op.overlap]: requestedAmenities
+        // };
       }
 
       // Calculate offset based on pagination parameters
