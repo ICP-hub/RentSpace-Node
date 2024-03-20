@@ -269,7 +269,7 @@ module.exports = {
           conditions.price[Op.lte] = parseFloat(maxPrice);
         }
       }
-      console.log("amenities : ",amenities)
+      console.log("amenities : ",amenities,Array.isArray(amenities))
       if(propertyType){
         conditions.propertyType={ [Op.iLike]: `%${propertyType}%` };
       }
