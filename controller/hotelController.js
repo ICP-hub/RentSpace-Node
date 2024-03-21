@@ -153,6 +153,7 @@ module.exports = {
       // const hotelId = v4().toString();
       const hotelId = await req.hotelCanister.createHotel(hotelData);
       console.log("hotelId : ", hotelId);
+      const requestedAmenities = amenities.split(','); 
       await Hotels.create({
         hotelId: hotelId,
         userPrincipal: principal,
@@ -163,7 +164,7 @@ module.exports = {
         location: hotelLocation,
         latitude: latitude,
         longitude: longitude,
-        amenities:amenities,
+        amenities:requestedAmenities,
         propertyType:propertyType
       });
 
