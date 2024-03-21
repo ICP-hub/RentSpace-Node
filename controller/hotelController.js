@@ -24,7 +24,7 @@ module.exports = {
         amenities,
         propertyType
       } = req.body;
-      // console.log("req.files",req.body)
+      console.log("req.files",amenities,propertyType)
       console.log("req.body.files", JSON.parse(req.body.files))
       // console.log("req.body.files[0]",req.body?.files?.[0])
       if (
