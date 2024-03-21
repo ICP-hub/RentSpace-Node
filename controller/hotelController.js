@@ -277,7 +277,7 @@ module.exports = {
         const requestedAmenities = amenities.split(','); 
         console.log("req amen : ",requestedAmenities)
         conditions.amenities = {
-          [Op.contained]: [...requestedAmenities]
+          [Op.contains]: [...requestedAmenities]
         };
       }
 
