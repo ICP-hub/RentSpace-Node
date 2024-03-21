@@ -6,7 +6,7 @@ const { v4 } = require("uuid");
 const appConstant = require("../config/appConstant.json");
 const { uploadFileToGCS } = require("../utils/googleCloudUpload");
 const { deleteFileFromLocal } = require("../utils/deleteFileFromLocal");
-const { Op, cast } = require("sequelize");
+const { Op } = require("sequelize");
 const { User } = require("../models/User");
 const axios = require('axios')
 
@@ -274,10 +274,10 @@ module.exports = {
         conditions.propertyType=propertyType
       }
       if(amenities && amenities.length>0){
-        // const requestedAmenities = amenities.split(','); 
-        // console.log("req amen : ",requestedAmenities)
+        const requestedAmenities = amenities.split(','); 
+        console.log("req amen : ",requestedAmenities)
         conditions.amenities = {
-          [Op.contains]: amenities.split(',').map(amenity => cast(amenity, 'enum_Hotels_amenities'))
+          [Op.contained]: [...requestedAmenities]
         };
       }
 
