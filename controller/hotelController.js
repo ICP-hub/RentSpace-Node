@@ -274,10 +274,10 @@ module.exports = {
         conditions.propertyType=propertyType
       }
       if(amenities && amenities.length>0){
-        const requestedAmenities = amenities.split(','); 
-        console.log("req amen : ",requestedAmenities)
+        // const requestedAmenities = amenities.split(','); 
+        // console.log("req amen : ",requestedAmenities)
         conditions.amenities = {
-          [Op.contains]: [...requestedAmenities]
+          [Op.contains]: amenities.split(',').map(amenity => Sequelize.cast(amenity, 'enum_Hotels_amenities'))
         };
       }
 
