@@ -276,9 +276,9 @@ module.exports = {
       if(amenities && amenities.length>0){
         const requestedAmenities = amenities.split(','); 
         console.log("req amen : ",requestedAmenities)
-        // conditions.amenities = {
-        //   [Op.overlap]: requestedAmenities
-        // };
+        conditions.amenities = {
+          [Op.contained]: [...requestedAmenities]
+        };
       }
 
       // Calculate offset based on pagination parameters
