@@ -1,4 +1,4 @@
-const { DataTypes, ARRAY } = require("sequelize");
+const { DataTypes, ARRAY, ENUM } = require("sequelize");
 const sequelize = require("../database"); // Ensure to configure the connection in this file
 
 const Hotels = sequelize.define("Hotel", {
@@ -80,6 +80,22 @@ const Hotels = sequelize.define("Hotel", {
       "Palace"
     ),
     defaultValue:"Hotel",
+  },
+  paymentMethods:{
+    type:DataTypes.ARRAY(DataTypes.ENUM(
+      "ICP",
+      "SOL",
+      "ckBTC",
+      "ckEth",
+      "gPay",
+      "applePay",
+      "creditCard"
+    )),
+    defaultValue:["ICP","creditCard"]
+  },
+  phantomWalletID:{
+    type:DataTypes.STRING,
+    defaultValue:"",
   },
 });
 module.exports = { Hotels };

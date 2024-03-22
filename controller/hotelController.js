@@ -22,7 +22,9 @@ module.exports = {
         latitude,
         longitude,
         amenities,
-        propertyType
+        propertyType,
+        paymentMethods,
+        phantomWalledID
       } = req.body;
       console.log("req.files",amenities,propertyType)
       console.log("req.body.files", JSON.parse(req.body.files))
@@ -154,6 +156,7 @@ module.exports = {
       const hotelId = await req.hotelCanister.createHotel(hotelData);
       console.log("hotelId : ", hotelId);
       const requestedAmenities = amenities.split(','); 
+      const acceptedPaymentMethods= paymentMethods.split(',');
       await Hotels.create({
         hotelId: hotelId,
         userPrincipal: principal,
@@ -165,7 +168,9 @@ module.exports = {
         latitude: latitude,
         longitude: longitude,
         amenities:requestedAmenities,
-        propertyType:propertyType
+        propertyType:propertyType,
+        paymentMethods:acceptedPaymentMethods,
+        phantomWalledID:phantomWalledID
       });
 
       return res
