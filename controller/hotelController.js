@@ -24,7 +24,7 @@ module.exports = {
         amenities,
         propertyType,
         paymentMethods,
-        phantomWalledID
+        phantomWalletID
       } = req.body;
       console.log("req.files",amenities,propertyType)
       console.log("req.body.files", JSON.parse(req.body.files))
@@ -170,7 +170,7 @@ module.exports = {
         amenities:requestedAmenities,
         propertyType:propertyType,
         paymentMethods:acceptedPaymentMethods,
-        phantomWalledID:phantomWalledID
+        phantomWalletID:phantomWalletID
       });
 
       return res
