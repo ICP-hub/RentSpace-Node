@@ -95,7 +95,7 @@ const Hotels = sequelize.define("Hotel", {
   },
   phantomWalletID:{
     type:DataTypes.STRING,
-    defaultValue:"",
+    allowNull:false
   },
 });
 module.exports = { Hotels };
