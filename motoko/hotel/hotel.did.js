@@ -1,4 +1,4 @@
-export const idlFactory = ({ IDL }) => {
+const idlFactory = ({ IDL }) => {
   const HotelInfo = IDL.Record({
     'hotelDes' : IDL.Text,
     'createdAt' : IDL.Text,
@@ -47,4 +47,6 @@ export const idlFactory = ({ IDL }) => {
   });
   return anon_class_9_1;
 };
-export const init = ({ IDL }) => { return []; };
+const init = ({ IDL }) => { return []; };
+
+module.exports={idlFactory,init};
