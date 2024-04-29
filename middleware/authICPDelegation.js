@@ -3,6 +3,7 @@ const { delegationValidation } = require("../helper/delegationValidation");
 
 module.exports = {
   async verifyDelegation(req, res, next) {
+    console.log("verify delegation")
     try {
       let pubKey = req.headers["x-public"]; // public key for delegation chain
       let priKey = req.headers["x-private"]; // private key for delegation chain
