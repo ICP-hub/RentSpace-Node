@@ -10,6 +10,10 @@ const Hotels = sequelize.define("Hotel", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  hotelDescription: {
+    type: DataTypes.TEXT,
+    allowNull: false,
+  },
   userPrincipal: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -25,21 +29,24 @@ const Hotels = sequelize.define("Hotel", {
   },
   imagesUrls: {
     type: DataTypes.TEXT,
-    get: function () {
-      return JSON.parse(this.getDataValue("imagesUrls"));
-    },
-    set: function (value) {
-      return this.setDataValue("imagesUrls", JSON.stringify(value));
-    },
+    allowNull: false,
+
+    // get: function () {
+    //   return JSON.parse(this.getDataValue("imagesUrls"));
+    // },
+    // set: function (value) {
+    //   return this.setDataValue("imagesUrls", JSON.stringify(value));
+    // },
   },
   videoUrls: {
     type: DataTypes.TEXT,
-    get: function () {
-      return JSON.parse(this.getDataValue("videoUrls"));
-    },
-    set: function (value) {
-      return this.setDataValue("videoUrls", JSON.stringify(value));
-    },
+    allowNull: false,
+    // get: function () {
+    //   return JSON.parse(this.getDataValue("videoUrls"));
+    // },
+    // set: function (value) {
+    //   return this.setDataValue("videoUrls", JSON.stringify(value));
+    // },
   },
   location: {
     type: DataTypes.STRING,
@@ -73,11 +80,11 @@ const Hotels = sequelize.define("Hotel", {
   propertyType:{
     type:DataTypes.ENUM(
       "House",
-      "Guest House",
-      "Flat",
+      "Villa",
+      "Apartment",
       "Hotel",
       "Resort",
-      "Palace"
+      "Glamping",
     ),
     defaultValue:"Hotel",
   },
@@ -97,5 +104,24 @@ const Hotels = sequelize.define("Hotel", {
     type:DataTypes.STRING,
     allowNull:false
   },
+  availableFrom:{
+    type:DataTypes.DATE,
+    allowNull:false
+  },
+  availableTill:{
+    type:DataTypes.DATE,
+    allowNull:false
+  },
+  createdAt:{
+    type:DataTypes.DATE,
+    allowNull:false
+  },
+  updatedAt:{
+    type:DataTypes.DATE,
+    allowNull:false
+  },
+  
+
+
 });
 module.exports = { Hotels };

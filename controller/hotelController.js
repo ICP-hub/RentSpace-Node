@@ -8,13 +8,15 @@ const { uploadFileToGCS } = require("../utils/googleCloudUpload");
 const { deleteFileFromLocal } = require("../utils/deleteFileFromLocal");
 const { Op } = require("sequelize");
 const { User } = require("../models/User");
-const axios = require('axios')
+const axios = require("axios");
+const { create } = require("underscore");
 
 module.exports = {
   async createHotel(req, res) {
     try {
-      const principal = req.principal;
+      // const principal = req.principal;
       const {
+        hotelId,
         hotelTitle,
         hotelDes,
         hotelPrice,
@@ -24,161 +26,189 @@ module.exports = {
         amenities,
         propertyType,
         paymentMethods,
-        phantomWalletID
+        phantomWalletID,
       } = req.body;
-      console.log("req.files",amenities,propertyType)
-      console.log("req.body.files", JSON.parse(req.body.files))
+
+      // console.log("req.files", amenities, propertyType);
+      // console.log("req.body.files", JSON.parse(req.body.files));
       // console.log("req.body.files[0]",req.body?.files?.[0])
-      if (
-        _.isEmpty(hotelTitle) ||
-        _.isEmpty(hotelDes) ||
-        _.isEmpty(hotelPrice) ||
-        _.isEmpty(hotelLocation) ||
-        _.isEmpty(latitude) ||
-        _.isEmpty(longitude)
-      ) {
-        return res
-          .status(400)
-          .json({ status: false, error: errorMessages.invalidData });
-      }
 
-      if (hotelDes.length > 700 || hotelTitle.length > 70) {
-        return res.status(400).json({ status: false, error: errorMessages.dataTooLarge })
-      }
+      // if (
+      //   _.isEmpty(hotelTitle) ||
+      //   _.isEmpty(hotelDes) ||
+      //   _.isEmpty(hotelPrice) ||
+      //   _.isEmpty(hotelLocation) ||
+      //   _.isEmpty(latitude) ||
+      //   _.isEmpty(longitude)
+      // ) {
+      //   return res
+      //     .status(400)
+      //     .json({ status: false, error: errorMessages.invalidData });
+      // }
 
-      let user = await User.findOne({ where: { principal: principal } });
-      if (_.isEmpty(user)) {
-        return res
-          .status(404)
-          .json({ status: false, error: errorMessages.userNotFound });
-      }
+      // if (hotelDes.length > 700 || hotelTitle.length > 70) {
+      //   return res
+      //     .status(400)
+      //     .json({ status: false, error: errorMessages.dataTooLarge });
+      // }
 
-      if (_.isEmpty(req.files) && _.isEmpty(req.body.files)) {
-        return res
-          .status(400)
-          .json({ status: false, error: errorMessages.noFileUploaded });
-      }
+      // let user = await User.findOne({ where: { principal: principal } });
+      // if (_.isEmpty(user)) {
+      //   return res
+      //     .status(404)
+      //     .json({ status: false, error: errorMessages.userNotFound });
+      // }
 
-      const createdAt = "";
-      const hotelImagePath = [];
-      let hotelVideoPath = [];
+      // if (_.isEmpty(req.files) && _.isEmpty(req.body.files)) {
+      //   return res
+      //     .status(400)
+      //     .json({ status: false, error: errorMessages.noFileUploaded });
+      // }
 
-      // This code for react native calls
-      if (_.isEmpty(req?.files?.[0]?.mimetype)) {
-        // Check if the file size is within the allowed limits
-        for (let file of JSON.parse(req.body.files)) {
-          console.log("files : ", file)
-          if (file.type.includes("video")) {
-            if (!file || file.fileSize > 200 * 1024 * 1024) {
-              // 200MB limit of video size
-              return res
-                .status(400)
-                .json({ status: false, error: errorMessages.fileSizeTooLarge });
-            }
-          }
-          if (!file || file.fileSize > 20 * 1024 * 1024) {
-            // 20MB limit of image size
-            return res
-              .status(400)
-              .json({ status: false, error: errorMessages.fileSizeTooLarge });
-          }
+      // const createdAt = "";
+      // const hotelImagePath = [];
+      // let hotelVideoPath = [];
+
+      // // This code for react native calls
+      // if (_.isEmpty(req?.files?.[0]?.mimetype)) {
+      //   // Check if the file size is within the allowed limits
+      //   for (let file of JSON.parse(req.body.files)) {
+      //     console.log("files : ", file);
+      //     if (file.type.includes("video")) {
+      //       if (!file || file.fileSize > 200 * 1024 * 1024) {
+      //         // 200MB limit of video size
+      //         return res
+      //           .status(400)
+      //           .json({ status: false, error: errorMessages.fileSizeTooLarge });
+      //       }
+      //     }
+      //     if (!file || file.fileSize > 20 * 1024 * 1024) {
+      //       // 20MB limit of image size
+      //       return res
+      //         .status(400)
+      //         .json({ status: false, error: errorMessages.fileSizeTooLarge });
+      //     }
+      //   }
+
+      //   let hotelFiles = JSON.parse(req.body.files); // Corrected variable name
+      //   for (const file of hotelFiles) {
+      //     let imageUrl = await uploadFileToGCS(
+      //       appConstant.BUCKET_NAME,
+      //       file.fileName, // Corrected property name
+      //       file.type, // Corrected property name
+      //       file.base64,
+      //       null,
+      //       req.body
+      //     );
+      //     if (file.type.includes("video")) {
+      //       // Corrected property name
+      //       hotelVideoPath.push(imageUrl);
+      //     } else {
+      //       hotelImagePath.push(imageUrl);
+      //     }
+      //   }
+      //   console.log("uploaded videos : ", hotelVideoPath);
+      //   console.log("uploaded images : ", hotelImagePath);
+      // }
+
+      // // This code for web browsers or postman
+      // if (_.isEmpty(req?.files?.[0]?.type)) {
+      //   // Check if the file size is within the allowed limitx
+      //   for (let file of req.files) {
+      //     if (file.mimetype.includes("video")) {
+      //       if (!file || file.size > 200 * 1024 * 1024) {
+      //         // 200MB limit of video size
+      //         return res
+      //           .status(400)
+      //           .json({ status: false, error: errorMessages.fileSizeTooLarge });
+      //       }
+      //     }
+      //     if (!file || file.size > 20 * 1024 * 1024) {
+      //       // 20MB limit of image size
+      //       return res
+      //         .status(400)
+      //         .json({ status: false, error: errorMessages.fileSizeTooLarge });
+      //     }
+      //   }
+      //   let hotelFiles = req.files;
+
+      //   for (const file of hotelFiles) {
+      //     let imageUrl = await uploadFileToGCS(
+      //       appConstant.BUCKET_NAME,
+      //       file.originalname,
+      //       file.mimetype,
+      //       null,
+      //       file
+      //     );
+      //     if (file.mimetype.includes("video")) {
+      //       hotelVideoPath.push(imageUrl);
+      //     } else {
+      //       hotelImagePath.push(imageUrl);
+      //     }
+      //   }
+      // }
+
+      // const hotelData = {
+      //   hotelTitle: hotelTitle,
+      //   hotelDes: hotelDes,
+      //   // hotelImage: hotelImagePath.toString(),
+      //   hotelPrice: hotelPrice.toString(),
+      //   hotelLocation: hotelLocation,
+      //   // createdAt: createdAt,
+      // };
+
+      // console.log("hotelData : ", hotelData);
+      // // const hotelId = v4().toString();
+      // const hotelId = await req.hotelCanister.createHotel(hotelData);
+      // console.log("hotelId : ", hotelId);
+      // const requestedAmenities = amenities.split(",");
+      // const acceptedPaymentMethods = paymentMethods.split(",");
+
+      function addOneMonth(dateString) {
+        let date = new Date(dateString);
+        let currentMonth = date.getMonth();
+        let newMonth = currentMonth + 1;
+        let year = date.getFullYear();
+        if (newMonth > 11) {
+            newMonth = 0; 
+            year++; 
         }
+        date.setMonth(newMonth);
+        date.setFullYear(year);
+        return date;
+    }
 
-        let hotelFiles = JSON.parse(req.body.files); // Corrected variable name
-        for (const file of hotelFiles) {
-          let imageUrl = await uploadFileToGCS(
-            appConstant.BUCKET_NAME,
-            file.fileName, // Corrected property name
-            file.type, // Corrected property name
-            file.base64,
-            null,
-            req.body
-          );
-          if (file.type.includes("video")) {
-            // Corrected property name
-            hotelVideoPath.push(imageUrl);
-          } else {
-            hotelImagePath.push(imageUrl);
-          }
-        }
-        console.log('uploaded videos : ', hotelVideoPath)
-        console.log('uploaded images : ', hotelImagePath)
-      }
 
-      // This code for web browsers or postman
-      if (_.isEmpty(req?.files?.[0]?.type)) {
-        // Check if the file size is within the allowed limitx
-        for (let file of req.files) {
-          if (file.mimetype.includes("video")) {
-            if (!file || file.size > 200 * 1024 * 1024) {
-              // 200MB limit of video size
-              return res
-                .status(400)
-                .json({ status: false, error: errorMessages.fileSizeTooLarge });
-            }
-          }
-          if (!file || file.size > 20 * 1024 * 1024) {
-            // 20MB limit of image size
-            return res
-              .status(400)
-              .json({ status: false, error: errorMessages.fileSizeTooLarge });
-          }
-        }
-        let hotelFiles = req.files;
+      const availableTill = addOneMonth(new Date());
 
-        for (const file of hotelFiles) {
-          let imageUrl = await uploadFileToGCS(
-            appConstant.BUCKET_NAME,
-            file.originalname,
-            file.mimetype,
-            null,
-            file,
-          );
-          if (file.mimetype.includes("video")) {
-            hotelVideoPath.push(imageUrl);
-          } else {
-            hotelImagePath.push(imageUrl);
-          }
-        }
-      }
-
-      const hotelData = {
-        hotelTitle: hotelTitle,
-        hotelDes: hotelDes,
-        hotelImage: hotelImagePath.toString(),
-        hotelPrice: hotelPrice.toString(),
-        hotelLocation: hotelLocation,
-        createdAt: createdAt,
-      };
-
-      console.log("hotelData : ", hotelData);
-      // const hotelId = v4().toString();
-      const hotelId = await req.hotelCanister.createHotel(hotelData);
-      console.log("hotelId : ", hotelId);
-      const requestedAmenities = amenities.split(','); 
-      const acceptedPaymentMethods= paymentMethods.split(',');
       await Hotels.create({
         hotelId: hotelId,
-        userPrincipal: principal,
         hotelName: hotelTitle,
+        hotelDescription: hotelDes,
+        userPrincipal: "principal1256",
         price: hotelPrice,
-        imagesUrls: hotelImagePath,
-        videoUrls: hotelVideoPath,
+        priceCurrency: "USDT",
+        imagesUrls: "www.image.com",
+        videoUrls: "www.video.com",
         location: hotelLocation,
         latitude: latitude,
         longitude: longitude,
-        amenities:requestedAmenities,
-        propertyType:propertyType,
-        paymentMethods:acceptedPaymentMethods,
-        phantomWalletID:phantomWalletID
+        likedBy: ["200"],
+        amenities: amenities,
+        propertyType: propertyType,
+        paymentMethods: paymentMethods,
+        phantomWalletID: phantomWalletID,
+        availableFrom: String(new Date()),
+        availableTill: availableTill,
+        createdAt: String(new Date()),
+        updatedAt: String(new Date()),
       });
-
       return res
         .status(201)
         .json({ staus: true, message: successMessages.hotelCreated });
     } catch (error) {
-      console.log("Error", error.message);
-      deleteFileFromLocal(req.files);
+      console.log("Error -> ", error);
+      // deleteFileFromLocal(req.files);
       return res
         .status(500)
         .json({ status: false, error: errorMessages.internalServerError });
@@ -255,7 +285,7 @@ module.exports = {
         page = 1,
         pageSize = 10,
         amenities,
-        propertyType
+        propertyType,
       } = req.query;
 
       // Define conditions for filtering
@@ -275,14 +305,14 @@ module.exports = {
           conditions.price[Op.lte] = parseFloat(maxPrice);
         }
       }
-      if(propertyType){
-        conditions.propertyType=propertyType
+      if (propertyType) {
+        conditions.propertyType = propertyType;
       }
-      if(amenities && amenities.length>0){
-        const requestedAmenities = amenities.split(','); 
-        console.log("req amen : ",requestedAmenities)
+      if (amenities && amenities.length > 0) {
+        const requestedAmenities = amenities.split(",");
+        console.log("req amen : ", requestedAmenities);
         conditions.amenities = {
-          [Op.overlap]: [...requestedAmenities]
+          [Op.overlap]: [...requestedAmenities],
         };
       }
 
@@ -295,7 +325,6 @@ module.exports = {
         limit: pageSize,
         offset: offset,
       });
-
 
       // let response
       // const options = {
@@ -314,13 +343,11 @@ module.exports = {
       //   }
       // };
 
-
       // try {
       //   response = await axios.request(options);
       // } catch (error) {
       //   console.error(error);
       // }
-
 
       // const hotelsFromAPI = []
       // console.log(response)
@@ -412,7 +439,12 @@ module.exports = {
     try {
       const { user, hotelId } = req.body;
 
-      if (user == "" && hotelId == "" && user == undefined && hotelId == undefined) {
+      if (
+        user == "" &&
+        hotelId == "" &&
+        user == undefined &&
+        hotelId == undefined
+      ) {
         return res
           .status(400)
           .json({ status: false, message: errorMessages.invalidData });
@@ -427,33 +459,33 @@ module.exports = {
 
       if (hotelData?.likedBy?.length != 0) {
         if (hotelData?.likedBy?.includes(user)) {
-
-          const newArr = hotelData?.likedBy?.filter(item => item != user)
-          const update = await hotelData.update({ likedBy: newArr })
-          return res
-            .status(200)
-            .json({ status: true, likedremovedBy: user, message: successMessages.removeLike });
+          const newArr = hotelData?.likedBy?.filter((item) => item != user);
+          const update = await hotelData.update({ likedBy: newArr });
+          return res.status(200).json({
+            status: true,
+            likedremovedBy: user,
+            message: successMessages.removeLike,
+          });
         } else {
-          const arr = [...hotelData?.likedBy, user]
-          const update = await hotelData.update({ likedBy: arr })
-          return res
-            .status(200)
-            .json({ status: true, likedBy: user, message: successMessages.likeSuccess });
-
+          const arr = [...hotelData?.likedBy, user];
+          const update = await hotelData.update({ likedBy: arr });
+          return res.status(200).json({
+            status: true,
+            likedBy: user,
+            message: successMessages.likeSuccess,
+          });
         }
       } else {
-        const arr = [...hotelData?.likedBy, user]
-        const update = await hotelData.update({ likedBy: arr })
-        return res
-          .status(200)
-          .json({ status: true, likedBy: user, message: successMessages.likeSuccess });
-
+        const arr = [...hotelData?.likedBy, user];
+        const update = await hotelData.update({ likedBy: arr });
+        return res.status(200).json({
+          status: true,
+          likedBy: user,
+          message: successMessages.likeSuccess,
+        });
       }
-
-
-
     } catch (err) {
-      console.log(err)
+      console.log(err);
       return res
         .status(500)
         .json({ status: false, message: errorMessages.internalServerError });
@@ -461,9 +493,8 @@ module.exports = {
   },
 
   async getLikesOnHotel(req, res) {
-
-    const hotelId = req.query.hotelId
-    console.log(hotelId)
+    const hotelId = req.query.hotelId;
+    console.log(hotelId);
 
     const hotelData = await Hotels.findOne({ where: { hotelId } });
 
@@ -473,7 +504,65 @@ module.exports = {
         .json({ status: false, message: errorMessages.hotelNotFound });
     }
 
-    res.json({status: true, numberOfLikes: hotelData.likedBy?.length})
+    res.json({ status: true, numberOfLikes: hotelData.likedBy?.length });
+  },
 
-  }
+  // delete hotel by hotelId
+
+  async deleteHotel(req, res) {
+    const hotelId = req.query.hotelId;
+    console.log(hotelId);
+
+    const hotel = await Hotels.findOne({ where: { hotelId } });
+
+    if (!hotel) {
+      return res
+        .status(400)
+        .json({ status: false, message: errorMessages.hotelNotFound });
+    }
+
+    await hotel.destroy();
+
+    res.json({ status: true, message: successMessages.hotelDeleted });
+  },
+
+  // update hotel by hotelId
+  async updateHotel(req, res) {
+    const {
+      hotelId,
+      hotelName,
+      hotelDes,
+      price,
+      imagesUrls,
+      videoUrls,
+      location,
+      amenities,
+      propertyType,
+      paymentMethods,
+    } = req.body;
+
+    // Finding and updating the hotel in postgres
+    const hotel = await Hotels.findOne({ where: { hotelId } });
+
+    if (!hotel) {
+      return res
+        .status(400)
+        .json({ status: false, message: errorMessages.hotelNotFound });
+    }
+    if (hotel) {
+      await hotel.update({
+        hotelName,
+        hotelDescription: hotelDes,
+        price,
+        imagesUrls,
+        videoUrls,
+        location,
+        amenities,
+        propertyType,
+        paymentMethods,
+      });
+
+      return res.json({ status: true, message: successMessages.hotelUpdated });
+    }
+  },
 };

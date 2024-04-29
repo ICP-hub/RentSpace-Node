@@ -1,10 +1,10 @@
 require("dotenv").config();
-const fetch = require('node-fetch-commonjs')
-const crypto = require('crypto');
+const fetch = require("node-fetch-commonjs");
+const crypto = require("crypto");
 global.crypto = crypto.webcrypto;
 global.fetch = fetch;
 const express = require("express");
-const cors = require('cors');
+const cors = require("cors");
 const sequelize = require("./database");
 const routes = require("./routes");
 _ = require("underscore");
