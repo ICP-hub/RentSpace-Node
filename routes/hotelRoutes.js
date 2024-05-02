@@ -7,7 +7,8 @@ const {
   updateLikesOnHotel,
   getLikesOnHotel,
   deleteHotel,
-  updateHotel
+  updateHotel,
+  updateHotelAvailbility,
 } = require("../controller/hotelController");
 const validateUser = require("../middleware/auth");
 const { verifyDelegation } = require("../middleware/authICPDelegation");
@@ -30,5 +31,6 @@ route.patch("/updateLikesOnHotel", updateLikesOnHotel);
 route.get("/hotel/getLikes", getLikesOnHotel);
 route.delete("/hotel/deleteHotel", deleteHotel);
 route.put("/hotel/updateHotel", updateHotel);
+route.put("/hotel/updateHotelAvailbility", updateHotelAvailbility);
 
 module.exports = route;

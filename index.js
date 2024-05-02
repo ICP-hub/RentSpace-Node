@@ -10,7 +10,15 @@ const routes = require("./routes");
 _ = require("underscore");
 
 const app = express();
-app.use(cors());
+app.use(cors(
+  {
+    origin: "*",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }
+));
 
 const PORT = process.env.PORT || 5000;
 

@@ -12,6 +12,7 @@ const axios = require("axios");
 const { create } = require("underscore");
 
 module.exports = {
+  // create hotel
   async createHotel(req, res) {
     try {
       // const principal = req.principal;
@@ -164,22 +165,17 @@ module.exports = {
       // const requestedAmenities = amenities.split(",");
       // const acceptedPaymentMethods = paymentMethods.split(",");
 
-      function addOneMonth(dateString) {
-        let date = new Date(dateString);
-        let currentMonth = date.getMonth();
-        let newMonth = currentMonth + 1;
-        let year = date.getFullYear();
-        if (newMonth > 11) {
-            newMonth = 0; 
-            year++; 
-        }
-        date.setMonth(newMonth);
-        date.setFullYear(year);
-        return date;
-    }
+      const currentDate = new Date();
 
+      const day = currentDate.getDate(); // Get the day of the month (1-31)
+      const month = currentDate.getMonth() + 1; // Get the month (0-11) + 1 because months are zero-based
+      const year = currentDate.getFullYear();
 
-      const availableTill = addOneMonth(new Date());
+      // Convert oneMonthAfter to a date object
+      const oneMonthAfterDate = new Date(`${month + 1}/${day}/${year}`);
+
+      console.log("date : ", currentDate);
+      console.log("oneMonthAfter : ", oneMonthAfterDate);
 
       await Hotels.create({
         hotelId: hotelId,
@@ -198,10 +194,10 @@ module.exports = {
         propertyType: propertyType,
         paymentMethods: paymentMethods,
         phantomWalletID: phantomWalletID,
-        availableFrom: String(new Date()),
-        availableTill: availableTill,
-        createdAt: String(new Date()),
-        updatedAt: String(new Date()),
+        availableFrom: oneMonthAfterDate,
+        availableTill: oneMonthAfterDate,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
       return res
         .status(201)
@@ -290,6 +286,15 @@ module.exports = {
 
       // Define conditions for filtering
       const conditions = {};
+
+      // get current date in format yyyy-mm-dd to match with availableFrom and availableTill
+      var date = new Date();
+      var day = date.getDate();
+      var month = date.getMonth() + 1;
+      var year = date.getFullYear();
+      var final = `${year}-${month}-${day+1}`
+      var currentDate = new Date(final)
+      
       if (name) {
         conditions.hotelName = { [Op.iLike]: `%${name}%` }; // Case-insensitive partial match
       }
@@ -315,7 +320,16 @@ module.exports = {
           [Op.overlap]: [...requestedAmenities],
         };
       }
-
+      // check if availableFrom is less than or equal to current date and availableTill is greater than or equal to current date
+      if(currentDate){
+        conditions.availableFrom = {
+          [Op.lte]: currentDate,
+        };
+        conditions.availableTill = {
+          [Op.gte]: currentDate,
+        };
+      }
+      
       // Calculate offset based on pagination parameters
       const offset = (page - 1) * pageSize;
 
@@ -386,6 +400,12 @@ module.exports = {
       //   }
       // })
 
+      if (filteredHotelsDB.length == 0) {
+        return res.json({
+          status: false,
+          message: errorMessages.noDataFound,
+        });
+      }
       res.json({ status: true, hotels: filteredHotelsDB });
     } catch (error) {
       console.error(error);
@@ -560,7 +580,34 @@ module.exports = {
         amenities,
         propertyType,
         paymentMethods,
+        updatedAt: new Date(),
       });
+
+      console.log("Hotel updated successfully");
+
+      return res.json({ status: true, message: successMessages.hotelUpdated });
+    }
+  },
+
+  async updateHotelAvailbility(req, res) {
+    const { hotelId, availableFrom, availableTill } = req.body;
+
+    // Finding and updating the hotel in postgres
+    const hotel = await Hotels.findOne({ where: { hotelId } });
+
+    if (!hotel) {
+      return res
+        .status(400)
+        .json({ status: false, message: errorMessages.hotelNotFound });
+    }
+    if (hotel) {
+      await hotel.update({
+        updatedAt: new Date(),
+        availableFrom: availableFrom,
+        availableTill: availableTill,
+      });
+
+      console.log("Hotel availibility updated successfully");
 
       return res.json({ status: true, message: successMessages.hotelUpdated });
     }

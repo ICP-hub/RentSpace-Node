@@ -73,7 +73,8 @@ const Hotels = sequelize.define("Hotel", {
       "parking",
       "medication",
       "gaming",
-      "dining"
+      "dining",
+      "ac"
     )),
     defaultValue:[],
   },
