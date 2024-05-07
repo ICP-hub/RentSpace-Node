@@ -11,6 +11,11 @@ const { User } = require("../models/User");
 const axios = require("axios");
 const { create } = require("underscore");
 
+const RateHawkUrls = require("../config/rateHawkUrls");
+
+const username = process.env.RATE_HAWK_USERNAME;
+const password = process.env.RATE_HAWK_PASSWORD;
+
 module.exports = {
   // create hotel
   async createHotel(req, res) {
@@ -21,7 +26,10 @@ module.exports = {
         hotelTitle,
         hotelDes,
         hotelPrice,
+        priceCurrency,
         hotelLocation,
+        imagesUrls,
+        videoUrls,
         latitude,
         longitude,
         amenities,
@@ -176,20 +184,21 @@ module.exports = {
 
       console.log("date : ", currentDate);
       console.log("oneMonthAfter : ", oneMonthAfterDate);
+      
 
       await Hotels.create({
-        hotelId: hotelId,
+        hotelId: hotelId, // need to generate unique id for each hotel
         hotelName: hotelTitle,
         hotelDescription: hotelDes,
-        userPrincipal: "principal1256",
+        userPrincipal: "2yv67-vdt7m-6ajix-goswt-coftj-5d2db-he4fl-t5knf-qii2a-3pajs-cqe", // get it from frontend this is hardcoded for now for testing
         price: hotelPrice,
-        priceCurrency: "USDT",
-        imagesUrls: "www.image.com",
-        videoUrls: "www.video.com",
+        priceCurrency: priceCurrency ? priceCurrency : "USDT", // get it from frontend this is hardcoded for now for testing
+        imagesUrls: imagesUrls ? imagesUrls : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelImage%2FFreeVector-Seaside-Hotel-Vector.jpg?alt=media&token=ba2925c4-a339-4789-b1c8-eefff2bba27f",
+        videoUrls: videoUrls ? videoUrls : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelVideo%2FWhite%20Brown%20Modern%20Minimalist%20Real%20Estate%20Open%20House%20Video.mp4?alt=media&token=2ea7cc7c-0790-4f85-bfc8-4745662f4d8f", // get it from frontend
         location: hotelLocation,
         latitude: latitude,
         longitude: longitude,
-        likedBy: ["200"],
+        likedBy: [], // list of user principal who liked the hotel, by default it is empty on creation
         amenities: amenities,
         propertyType: propertyType,
         paymentMethods: paymentMethods,
@@ -292,9 +301,9 @@ module.exports = {
       var day = date.getDate();
       var month = date.getMonth() + 1;
       var year = date.getFullYear();
-      var final = `${year}-${month}-${day+1}`
-      var currentDate = new Date(final)
-      
+      var final = `${year}-${month}-${day + 1}`;
+      var currentDate = new Date(final);
+
       if (name) {
         conditions.hotelName = { [Op.iLike]: `%${name}%` }; // Case-insensitive partial match
       }
@@ -321,7 +330,7 @@ module.exports = {
         };
       }
       // check if availableFrom is less than or equal to current date and availableTill is greater than or equal to current date
-      if(currentDate){
+      if (currentDate) {
         conditions.availableFrom = {
           [Op.lte]: currentDate,
         };
@@ -329,7 +338,7 @@ module.exports = {
           [Op.gte]: currentDate,
         };
       }
-      
+
       // Calculate offset based on pagination parameters
       const offset = (page - 1) * pageSize;
 
@@ -527,6 +536,29 @@ module.exports = {
     res.json({ status: true, numberOfLikes: hotelData.likedBy?.length });
   },
 
+  // get all hotels
+
+  async getAllHotels(req, res) {
+
+    const userPrincipal = req.query.userPrincipal; // replace with user principal from frontend header like req.header("userPrincipal")
+
+    try {
+      const hotels = await Hotels.findAll({ where: { userPrincipal }});
+      if (hotels.length == 0) {
+        return res.json({
+          status: false,
+          message: errorMessages.noDataFound,
+        });
+      }
+      res.json({ status: true, hotels: hotels });
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(500)
+        .json({ status: false, error: errorMessages.internalServerError });
+    }
+  },
+
   // delete hotel by hotelId
 
   async deleteHotel(req, res) {
@@ -541,7 +573,10 @@ module.exports = {
         .json({ status: false, message: errorMessages.hotelNotFound });
     }
 
-    await hotel.destroy();
+    await hotel.destroy()
+    .then(() => {
+      console.log("Hotel deleted successfully");
+    })
 
     res.json({ status: true, message: successMessages.hotelDeleted });
   },
@@ -561,6 +596,37 @@ module.exports = {
       paymentMethods,
     } = req.body;
 
+    const updateFields = {};
+
+    if (hotelName) {
+      updateFields.hotelName = hotelName;
+    }
+    if (hotelDes) {
+      updateFields.hotelDescription = hotelDes;
+    }
+    if (price) {
+      updateFields.price = price;
+    }
+    if (imagesUrls) {
+      updateFields.imagesUrls = imagesUrls;
+    }
+    if (videoUrls) {
+      updateFields.videoUrls = videoUrls;
+    }
+    if (location) {
+      updateFields.location = location
+    }
+    if (amenities) {
+      updateFields.amenities = amenities;
+    }
+    if (propertyType) {
+      updateFields.propertyType = propertyType;
+    }
+    if (paymentMethods) {
+      updateFields.paymentMethods = paymentMethods;
+    }
+    
+
     // Finding and updating the hotel in postgres
     const hotel = await Hotels.findOne({ where: { hotelId } });
 
@@ -571,16 +637,7 @@ module.exports = {
     }
     if (hotel) {
       await hotel.update({
-        hotelName,
-        hotelDescription: hotelDes,
-        price,
-        imagesUrls,
-        videoUrls,
-        location,
-        amenities,
-        propertyType,
-        paymentMethods,
-        updatedAt: new Date(),
+        ...updateFields, updatedAt: new Date()
       });
 
       console.log("Hotel updated successfully");
@@ -612,4 +669,100 @@ module.exports = {
       return res.json({ status: true, message: successMessages.hotelUpdated });
     }
   },
+
+  // rate hawk api's for hotel
+
+  // search hotel
+  async searchHotel(req, res) {
+    const { query, language } = req.body;
+
+    const postData = {
+      query: query,
+      language: language,
+    };
+
+    await axios
+      .post(RateHawkUrls.searchUrl,
+        postData,
+        {
+          auth: {
+            username: username,
+            password: password,
+          },
+        }
+      )
+      .then((response) => {
+        console.log("Response sent");
+        res.json({ status: true, data: response.data });
+      })
+      .catch((error) => {
+        console.error("Error:", error.message);
+      });
+  },
+
+  // get hotel info
+  async getHotelInfo(req, res) {
+    const { hotelId, language } = req.body;
+
+    const postData = {
+      id: hotelId,
+      language: language,
+    };
+
+    await axios
+      .post(RateHawkUrls.hotelInfoUrl,
+        postData,
+        {
+          auth: {
+            username: username,
+            password: password,
+          },
+        }
+      )
+      .then((response) => {
+        console.log("Response sent");
+        res.json({ status: true, data: response.data });
+      })
+      .catch((error) => {
+        console.error("Error:", error.message);
+      });
+  },
+
+  // book hotel - get booking hash
+  async bookHotel(req, res) {
+    const { hotelId, checkInDate, checkOutDate, adults, children } =
+      req.body;
+
+    const postData = {
+      id: hotelId,
+      checkin: checkInDate,
+      checkout: checkOutDate,
+      language: "en",
+      guests: [
+        {
+          adults: adults,
+          children: children,
+        },
+      ],
+    };
+
+    await axios
+      .post(RateHawkUrls.hotelBookUrl,
+        postData,
+        {
+          auth: {
+            username: username,
+            password: password,
+          },
+        }
+      )
+      .then((response) => {
+        console.log("Response sent");
+        res.json({ status: true, data: response.data });
+      })
+      .catch((error) => {
+        console.error("Error:", error.message);
+      });
+  },
+
 };

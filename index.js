@@ -27,10 +27,14 @@ app.use("/api/v1", routes.userRoutes);
 app.use("/api/v1", routes.chatRoute);
 app.use("/api/v1", routes.hotelRoutes);
 
+app.get('/', (req, res) => {
+  res.send('Welcome to the homepage');
+});
+
 module.exports = app;
 const server = require("./socket/index");
 
 server.listen(PORT, async () => {
   sequelize.sync();
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port http://localhost:${PORT}`);
 });
