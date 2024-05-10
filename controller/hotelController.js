@@ -20,9 +20,8 @@ module.exports = {
   // create hotel
   async createHotel(req, res) {
     try {
-      // const principal = req.principal;
+      const principal = req.principal;
       const {
-        hotelId,
         hotelTitle,
         hotelDes,
         hotelPrice,
@@ -36,24 +35,27 @@ module.exports = {
         propertyType,
         paymentMethods,
         phantomWalletID,
+        vidFiles,
+        imgFiles
       } = req.body;
 
-      // console.log("req.files", amenities, propertyType);
+      console.log("req.files", req.body);
       // console.log("req.body.files", JSON.parse(req.body.files));
       // console.log("req.body.files[0]",req.body?.files?.[0])
 
-      // if (
-      //   _.isEmpty(hotelTitle) ||
-      //   _.isEmpty(hotelDes) ||
-      //   _.isEmpty(hotelPrice) ||
-      //   _.isEmpty(hotelLocation) ||
-      //   _.isEmpty(latitude) ||
-      //   _.isEmpty(longitude)
-      // ) {
-      //   return res
-      //     .status(400)
-      //     .json({ status: false, error: errorMessages.invalidData });
-      // }
+      if (
+        _.isEmpty(hotelTitle) ||
+        _.isEmpty(hotelDes) ||
+        _.isEmpty(hotelPrice) ||
+        _.isEmpty(hotelLocation) ||
+        _.isEmpty(latitude) ||
+        _.isEmpty(longitude)
+      ) {
+        console.log("empty")
+        return res
+          .status(400)
+          .json({ status: false, error: errorMessages.invalidData });
+      }
 
       // if (hotelDes.length > 700 || hotelTitle.length > 70) {
       //   return res
@@ -61,12 +63,12 @@ module.exports = {
       //     .json({ status: false, error: errorMessages.dataTooLarge });
       // }
 
-      // let user = await User.findOne({ where: { principal: principal } });
-      // if (_.isEmpty(user)) {
-      //   return res
-      //     .status(404)
-      //     .json({ status: false, error: errorMessages.userNotFound });
-      // }
+      let user = await User.findOne({ where: { principal: principal } });
+      if (_.isEmpty(user)) {
+        return res
+          .status(404)
+          .json({ status: false, error: errorMessages.userNotFound });
+      }
 
       // if (_.isEmpty(req.files) && _.isEmpty(req.body.files)) {
       //   return res
@@ -157,21 +159,11 @@ module.exports = {
       //   }
       // }
 
-      // const hotelData = {
-      //   hotelTitle: hotelTitle,
-      //   hotelDes: hotelDes,
-      //   // hotelImage: hotelImagePath.toString(),
-      //   hotelPrice: hotelPrice.toString(),
-      //   hotelLocation: hotelLocation,
-      //   // createdAt: createdAt,
-      // };
-
-      // console.log("hotelData : ", hotelData);
-      // // const hotelId = v4().toString();
-      // const hotelId = await req.hotelCanister.createHotel(hotelData);
-      // console.log("hotelId : ", hotelId);
-      // const requestedAmenities = amenities.split(",");
-      // const acceptedPaymentMethods = paymentMethods.split(",");
+      
+      const requestedAmenities = amenities.split(",");
+      const acceptedPaymentMethods = paymentMethods.split(",");
+      const newImgFiles=imgFiles.split(',')
+      const newVidFiles=vidFiles.split(',')
 
       const currentDate = new Date();
 
@@ -190,6 +182,7 @@ module.exports = {
         hotelId: hotelId, // need to generate unique id for each hotel
         hotelName: hotelTitle,
         hotelDescription: hotelDes,
+        userPrincipal: principal,
         userPrincipal: "2yv67-vdt7m-6ajix-goswt-coftj-5d2db-he4fl-t5knf-qii2a-3pajs-cqe", // get it from frontend this is hardcoded for now for testing
         price: hotelPrice,
         priceCurrency: priceCurrency ? priceCurrency : "USDT", // get it from frontend this is hardcoded for now for testing
@@ -201,7 +194,7 @@ module.exports = {
         likedBy: [], // list of user principal who liked the hotel, by default it is empty on creation
         amenities: amenities,
         propertyType: propertyType,
-        paymentMethods: paymentMethods,
+        paymentMethods: acceptedPaymentMethods,
         phantomWalletID: phantomWalletID,
         availableFrom: oneMonthAfterDate,
         availableTill: oneMonthAfterDate,
@@ -562,15 +555,29 @@ module.exports = {
   // delete hotel by hotelId
 
   async deleteHotel(req, res) {
-    const hotelId = req.query.hotelId;
-    console.log(hotelId);
+    try {
+      const hotelId = req.query.hotelId;
+      console.log(hotelId);
+      console.log(req.hotelCanister)
 
-    const hotel = await Hotels.findOne({ where: { hotelId } });
+      // await req.hotelCanister.deleteHotel()
 
-    if (!hotel) {
+      const hotel = await Hotels.findOne({ where: { hotelId } });
+
+      // if (!hotel) {
+      //   return res
+      //     .status(400)
+      //     .json({ status: false, message: errorMessages.hotelNotFound });
+      // }
+
+      // await hotel.destroy();
+
+      res.json({ status: true, message: successMessages.hotelDeleted });
+    } catch (error) {
+      console.error(error);
       return res
-        .status(400)
-        .json({ status: false, message: errorMessages.hotelNotFound });
+        .status(500)
+        .json({ status: false, error: errorMessages.internalServerError });
     }
 
     await hotel.destroy()

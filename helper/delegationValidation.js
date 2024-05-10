@@ -66,14 +66,14 @@ module.exports = {
         host: process.env.ICP_HOST,
       });
 
-      console.log("agent", agent);
+      // console.log("agent", agent);
 
       backendCanister = createActor(process.env.HOTEL_CANISTER_ID, {
         agent,
       });
-      console.log("backendCanister", backendCanister);
+      // console.log("backendCanister", backendCanister);
 
-      console.log("middleIdentity", middleIdentity.getPrincipal().toString());
+      // console.log("middleIdentity", middleIdentity.getPrincipal().toString());
 
       let principal = await backendCanister.whoami();
       console.log("principal", principal);
