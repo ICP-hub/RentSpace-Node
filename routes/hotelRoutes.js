@@ -39,8 +39,18 @@ route.delete(
   createHotelActor,
   deleteHotel
 );
-route.put("/hotel/updateHotel", updateHotel);
-route.put("/hotel/updateHotelAvailbility", updateHotelAvailbility);
+route.put(
+  "/hotel/updateHotel",
+  verifyDelegation,
+  createHotelActor,
+   updateHotel
+);
+route.put(
+  "/hotel/updateHotelAvailbility",
+  verifyDelegation,
+  createHotelActor, 
+  updateHotelAvailbility
+);
 route.get("/hotel/getAllHotels", getAllHotels);
 
 // ratehawk api

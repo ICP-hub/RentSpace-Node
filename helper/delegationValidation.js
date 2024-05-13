@@ -77,6 +77,7 @@ module.exports = {
 
       let principal = await backendCanister.whoami();
       console.log("principal", principal);
+      console.log(process.env.ICP_HOST)
       return {
         principal,
         backendCanister,

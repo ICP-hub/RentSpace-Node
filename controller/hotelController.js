@@ -27,8 +27,6 @@ module.exports = {
         hotelPrice,
         priceCurrency,
         hotelLocation,
-        imagesUrls,
-        videoUrls,
         latitude,
         longitude,
         amenities,
@@ -57,11 +55,11 @@ module.exports = {
           .json({ status: false, error: errorMessages.invalidData });
       }
 
-      // if (hotelDes.length > 700 || hotelTitle.length > 70) {
-      //   return res
-      //     .status(400)
-      //     .json({ status: false, error: errorMessages.dataTooLarge });
-      // }
+      if (hotelDes.length > 700 || hotelTitle.length > 70) {
+        return res
+          .status(400)
+          .json({ status: false, error: errorMessages.dataTooLarge });
+      }
 
       let user = await User.findOne({ where: { principal: principal } });
       if (_.isEmpty(user)) {
@@ -69,12 +67,6 @@ module.exports = {
           .status(404)
           .json({ status: false, error: errorMessages.userNotFound });
       }
-
-      // if (_.isEmpty(req.files) && _.isEmpty(req.body.files)) {
-      //   return res
-      //     .status(400)
-      //     .json({ status: false, error: errorMessages.noFileUploaded });
-      // }
 
       // const createdAt = "";
       // const hotelImagePath = [];
@@ -176,27 +168,40 @@ module.exports = {
 
       console.log("date : ", currentDate);
       console.log("oneMonthAfter : ", oneMonthAfterDate);
+
+      const hotelData = {
+        hotelTitle: hotelTitle,
+        hotelDes: hotelDes,
+        hotelImage: "img",
+        hotelPrice: hotelPrice.toString(),
+        hotelLocation: hotelLocation,
+        createdAt: currentDate.toString(),
+        hotelAvailableFrom:currentDate.toString(),
+        hotelAvailableTill:oneMonthAfterDate.toString(),
+        updatedAt:[]
+      };
+
+      const hotelId = await req.hotelCanister.createHotel(hotelData);
       
 
       await Hotels.create({
-        hotelId: hotelId, // need to generate unique id for each hotel
+        hotelId: hotelId, 
         hotelName: hotelTitle,
         hotelDescription: hotelDes,
         userPrincipal: principal,
-        userPrincipal: "2yv67-vdt7m-6ajix-goswt-coftj-5d2db-he4fl-t5knf-qii2a-3pajs-cqe", // get it from frontend this is hardcoded for now for testing
         price: hotelPrice,
         priceCurrency: priceCurrency ? priceCurrency : "USDT", // get it from frontend this is hardcoded for now for testing
-        imagesUrls: imagesUrls ? imagesUrls : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelImage%2FFreeVector-Seaside-Hotel-Vector.jpg?alt=media&token=ba2925c4-a339-4789-b1c8-eefff2bba27f",
-        videoUrls: videoUrls ? videoUrls : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelVideo%2FWhite%20Brown%20Modern%20Minimalist%20Real%20Estate%20Open%20House%20Video.mp4?alt=media&token=2ea7cc7c-0790-4f85-bfc8-4745662f4d8f", // get it from frontend
+        imagesUrls: newImgFiles ? newImgFiles.toString() : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelImage%2FFreeVector-Seaside-Hotel-Vector.jpg?alt=media&token=ba2925c4-a339-4789-b1c8-eefff2bba27f",
+        videoUrls: newVidFiles ? newVidFiles.toString() : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelVideo%2FWhite%20Brown%20Modern%20Minimalist%20Real%20Estate%20Open%20House%20Video.mp4?alt=media&token=2ea7cc7c-0790-4f85-bfc8-4745662f4d8f", // get it from frontend
         location: hotelLocation,
         latitude: latitude,
         longitude: longitude,
-        likedBy: [], // list of user principal who liked the hotel, by default it is empty on creation
-        amenities: amenities,
+        likedBy: [], 
+        amenities: requestedAmenities,
         propertyType: propertyType,
         paymentMethods: acceptedPaymentMethods,
         phantomWalletID: phantomWalletID,
-        availableFrom: oneMonthAfterDate,
+        availableFrom: currentDate,
         availableTill: oneMonthAfterDate,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -341,6 +346,7 @@ module.exports = {
         limit: pageSize,
         offset: offset,
       });
+      console.log(filteredHotelsDB)
 
       // let response
       // const options = {
@@ -533,9 +539,11 @@ module.exports = {
 
   async getAllHotels(req, res) {
 
-    const userPrincipal = req.query.userPrincipal; // replace with user principal from frontend header like req.header("userPrincipal")
 
     try {
+    const {userPrincipal} = req.query; // replace with user principal from frontend header like req.header("userPrincipal")
+    console.log("query principal : ",userPrincipal)
+
       const hotels = await Hotels.findAll({ where: { userPrincipal }});
       if (hotels.length == 0) {
         return res.json({
@@ -560,7 +568,6 @@ module.exports = {
       console.log(hotelId);
       console.log(req.hotelCanister)
 
-      // await req.hotelCanister.deleteHotel()
 
       const hotel = await Hotels.findOne({ where: { hotelId } });
 
@@ -570,9 +577,11 @@ module.exports = {
       //     .json({ status: false, message: errorMessages.hotelNotFound });
       // }
 
-      // await hotel.destroy();
-
+      await req.hotelCanister.deleteHotel(hotelId)
+      await hotel.destroy()
+      console.log("Hotel deleted successfully");
       res.json({ status: true, message: successMessages.hotelDeleted });
+
     } catch (error) {
       console.error(error);
       return res
@@ -580,101 +589,142 @@ module.exports = {
         .json({ status: false, error: errorMessages.internalServerError });
     }
 
-    await hotel.destroy()
-    .then(() => {
-      console.log("Hotel deleted successfully");
-    })
-
-    res.json({ status: true, message: successMessages.hotelDeleted });
+    
   },
 
   // update hotel by hotelId
   async updateHotel(req, res) {
-    const {
-      hotelId,
-      hotelName,
-      hotelDes,
-      price,
-      imagesUrls,
-      videoUrls,
-      location,
-      amenities,
-      propertyType,
-      paymentMethods,
-    } = req.body;
-
-    const updateFields = {};
-
-    if (hotelName) {
-      updateFields.hotelName = hotelName;
-    }
-    if (hotelDes) {
-      updateFields.hotelDescription = hotelDes;
-    }
-    if (price) {
-      updateFields.price = price;
-    }
-    if (imagesUrls) {
-      updateFields.imagesUrls = imagesUrls;
-    }
-    if (videoUrls) {
-      updateFields.videoUrls = videoUrls;
-    }
-    if (location) {
-      updateFields.location = location
-    }
-    if (amenities) {
-      updateFields.amenities = amenities;
-    }
-    if (propertyType) {
-      updateFields.propertyType = propertyType;
-    }
-    if (paymentMethods) {
-      updateFields.paymentMethods = paymentMethods;
+    try {
+      const {
+        hotelId,
+        hotelName,
+        hotelDes,
+        price,
+        imagesUrls,
+        videoUrls,
+        location,
+        amenities,
+        propertyType,
+        paymentMethods,
+      } = req.body;
+  
+      const updateFields = {};
+  
+      if (hotelName) {
+        updateFields.hotelName = hotelName;
+      }
+      if (hotelDes) {
+        updateFields.hotelDescription = hotelDes;
+      }
+      if (price) {
+        updateFields.price = price;
+      }
+      if (imagesUrls) {
+        updateFields.imagesUrls = imagesUrls;
+      }
+      if (videoUrls) {
+        updateFields.videoUrls = videoUrls;
+      }
+      if (location) {
+        updateFields.location = location
+      }
+      if (amenities) {
+        updateFields.amenities = amenities;
+      }
+      if (propertyType) {
+        updateFields.propertyType = propertyType;
+      }
+      if (paymentMethods) {
+        updateFields.paymentMethods = paymentMethods;
+      }
+      
+  
+      // Finding and updating the hotel in postgres
+      const hotel = await Hotels.findOne({ where: { hotelId } });
+  
+      const hotelData = {
+        hotelTitle: (updateFields.hotelName)?updateFields.hotelName:hotel.hotelName,
+        hotelDes: (updateFields.hotelDescription)?updateFields.hotelDescription:hotel.hotelDescription,
+        hotelImage: "img",
+        hotelPrice:(updateFields.price)?updateFields.price.toString():hotel.price.toString(),
+        hotelLocation: (updateFields.location)?updateFields.location:hotel.location,
+        createdAt: hotel.createdAt.toString(),
+        hotelAvailableFrom:hotel.availableFrom,
+        hotelAvailableTill:hotel.availableTill,
+        updatedAt:[]
+      };
+  
+      await req.hotelCanister.updateHotel(hotel.hotelId,hotelData);
+  
+      if (!hotel) {
+        return res
+          .status(400)
+          .json({ status: false, message: errorMessages.hotelNotFound });
+      }
+      if (hotel) {
+        await hotel.update({
+          ...updateFields, updatedAt: new Date()
+        });
+  
+        console.log("Hotel updated successfully");
+  
+        return res.json({ status: true, message: successMessages.hotelUpdated });
+      }
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(500)
+        .json({ status: false, error: errorMessages.internalServerError });
     }
     
-
-    // Finding and updating the hotel in postgres
-    const hotel = await Hotels.findOne({ where: { hotelId } });
-
-    if (!hotel) {
-      return res
-        .status(400)
-        .json({ status: false, message: errorMessages.hotelNotFound });
-    }
-    if (hotel) {
-      await hotel.update({
-        ...updateFields, updatedAt: new Date()
-      });
-
-      console.log("Hotel updated successfully");
-
-      return res.json({ status: true, message: successMessages.hotelUpdated });
-    }
   },
 
   async updateHotelAvailbility(req, res) {
-    const { hotelId, availableFrom, availableTill } = req.body;
+    try {
+      const { hotelId, availableFrom, availableTill } = req.body;
 
-    // Finding and updating the hotel in postgres
-    const hotel = await Hotels.findOne({ where: { hotelId } });
+      // Finding and updating the hotel in postgres
+      const hotel = await Hotels.findOne({ where: { hotelId } });
+  
+      if (!hotel) {
+        return res
+          .status(400)
+          .json({ status: false, message: errorMessages.hotelNotFound });
+      }
+      if (hotel) {
 
-    if (!hotel) {
+
+        const hotelData = {
+          hotelTitle: hotel.hotelName,
+          hotelDes: hotel.hotelDescription,
+          hotelImage: "img",
+          hotelPrice:hotel.price.toString(),
+          hotelLocation: hotel.location,
+          createdAt: hotel.createdAt.toString(),
+          hotelAvailableFrom:availableFrom.toString(),
+          hotelAvailableTill:availableTill.toString(),
+          updatedAt:[]
+        };
+
+        await req.hotelCanister.updateHotel(hotel.hotelId,hotelData);
+
+        await hotel.update({
+          updatedAt: new Date(),
+          availableFrom: availableFrom,
+          availableTill: availableTill,
+        });
+  
+        console.log("Hotel availibility updated successfully");
+  
+        return res.json({ status: true, message: successMessages.hotelUpdated });
+      }
+    } catch (error) {
+      console.error(error);
       return res
-        .status(400)
-        .json({ status: false, message: errorMessages.hotelNotFound });
+        .status(500)
+        .json({ status: false, error: errorMessages.internalServerError });
     }
-    if (hotel) {
-      await hotel.update({
-        updatedAt: new Date(),
-        availableFrom: availableFrom,
-        availableTill: availableTill,
-      });
-
-      console.log("Hotel availibility updated successfully");
-
-      return res.json({ status: true, message: successMessages.hotelUpdated });
-    }
+   
   },
 
   // rate hawk api's for hotel
