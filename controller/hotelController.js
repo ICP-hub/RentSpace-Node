@@ -9,12 +9,13 @@ const { deleteFileFromLocal } = require("../utils/deleteFileFromLocal");
 const { Op } = require("sequelize");
 const { User } = require("../models/User");
 const axios = require("axios");
-const { create } = require("underscore");
+const { create, isEmpty } = require("underscore");
 
-const RateHawkUrls = require("../config/rateHawkUrls");
-
-const username = process.env.RATE_HAWK_USERNAME;
-const password = process.env.RATE_HAWK_PASSWORD;
+const {
+  searchHotel,
+  getHotelInfo,
+  bookHotel,
+} = require("./rateHawkController");
 
 module.exports = {
   // create hotel
@@ -184,17 +185,21 @@ module.exports = {
 
       console.log("date : ", currentDate);
       console.log("oneMonthAfter : ", oneMonthAfterDate);
-      
 
       await Hotels.create({
         hotelId: hotelId, // need to generate unique id for each hotel
         hotelName: hotelTitle,
         hotelDescription: hotelDes,
-        userPrincipal: "2yv67-vdt7m-6ajix-goswt-coftj-5d2db-he4fl-t5knf-qii2a-3pajs-cqe", // get it from frontend this is hardcoded for now for testing
+        userPrincipal:
+          "2yv67-vdt7m-6ajix-goswt-coftj-5d2db-he4fl-t5knf-qii2a-3pajs-cqe", // get it from frontend this is hardcoded for now for testing
         price: hotelPrice,
         priceCurrency: priceCurrency ? priceCurrency : "USDT", // get it from frontend this is hardcoded for now for testing
-        imagesUrls: imagesUrls ? imagesUrls : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelImage%2FFreeVector-Seaside-Hotel-Vector.jpg?alt=media&token=ba2925c4-a339-4789-b1c8-eefff2bba27f",
-        videoUrls: videoUrls ? videoUrls : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelVideo%2FWhite%20Brown%20Modern%20Minimalist%20Real%20Estate%20Open%20House%20Video.mp4?alt=media&token=2ea7cc7c-0790-4f85-bfc8-4745662f4d8f", // get it from frontend
+        imagesUrls: imagesUrls
+          ? imagesUrls
+          : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelImage%2Fjw-marriott-los-angeles-la-live-exterior.jpg?alt=media&token=1c85b047-38a3-4a45-ad6b-c1c63308dc8e",
+        videoUrls: videoUrls
+          ? videoUrls
+          : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelVideo%2FWhite%20Brown%20Modern%20Minimalist%20Real%20Estate%20Open%20House%20Video.mp4?alt=media&token=2ea7cc7c-0790-4f85-bfc8-4745662f4d8f", // get it from frontend
         location: hotelLocation,
         latitude: latitude,
         longitude: longitude,
@@ -203,10 +208,10 @@ module.exports = {
         propertyType: propertyType,
         paymentMethods: paymentMethods,
         phantomWalletID: phantomWalletID,
-        availableFrom: oneMonthAfterDate,
+        availableFrom: currentDate,
         availableTill: oneMonthAfterDate,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: currentDate,
+        updatedAt: currentDate,
       });
       return res
         .status(201)
@@ -293,6 +298,9 @@ module.exports = {
         propertyType,
       } = req.query;
 
+      console.log("Location : ", location);
+      // console.log(req.query);
+
       // Define conditions for filtering
       const conditions = {};
 
@@ -349,79 +357,124 @@ module.exports = {
         offset: offset,
       });
 
-      // let response
-      // const options = {
-      //   method: 'GET',
-      //   url: 'https://booking-com13.p.rapidapi.com/stays/properties/list-v2',
-      //   params: {
-      //     location: 'France',
-      //     checkin_date: '2024-02-09',
-      //     checkout_date: '2024-02-10',
-      //     language_code: 'en-us',
-      //     currency_code: 'USD'
-      //   },
-      //   headers: {
-      //     'X-RapidAPI-Key': '4c950a4ca5msh959e74b886a4c78p1c992bjsnd97091aca10c',
-      //     'X-RapidAPI-Host': 'booking-com13.p.rapidapi.com'
-      //   }
-      // };
+      // ----------------- RateHawk API -----------------
 
-      // try {
-      //   response = await axios.request(options);
-      // } catch (error) {
-      //   console.error(error);
-      // }
+      // searching hotels from RateHawk API baswd on location
 
-      // const hotelsFromAPI = []
-      // console.log(response)
-      // const data = response.data?.data?.length
+      var AllApiHotels = [];
 
-      // for (let i = 0; i < data; i++) {
+      if (!isEmpty(location) && !isEmpty(name)) {
 
-      //   if (hotelsFromAPI && Array.isArray(hotelsFromAPI)) {
-      //     hotelsFromAPI.push({
-      //       idDetail: response.data?.data[i]?.idDetail,
-      //       hotelName: response.data?.data[i]?.displayName?.text,
-      //       location: response.data?.data[i]?.basicPropertyData.location?.address + ", " + response.data?.data[i]?.basicPropertyData.location?.city,
-      //       price: response.data?.data[i]?.priceDisplayInfoIrene?.displayPrice?.amountPerStay?.amountRounded.replace("$", "").replace(",", ""),
-      //       priceCurrency: response.data?.data[i]?.priceDisplayInfoIrene?.displayPrice?.amountPerStay?.currency
-      //     })
-      //   }
+        const searchString = name + " " + location;
 
-      // }
+        console.log("Searched Hotels from RateHawk API : " + searchString);
 
-      // const filteredHotelsAPI = hotelsFromAPI.filter(item => {
-      //   if (minPrice && minPrice != "" && !maxPrice) {
+        const apiHotels = await searchHotel({
+          query: searchString,
+          language: "en",
+        });
 
-      //     return parseInt(item.price) >= parseInt(minPrice)
-      //   } if (maxPrice && maxPrice != "" && !minPrice) {
+        if (!isEmpty(apiHotels)) {
+          AllApiHotels = apiHotels;
+        } else {
+          AllApiHotels = [];
+        }
+      }
 
-      //     return parseInt(item.price) <= parseInt(maxPrice)
-      //   } if (maxPrice && minPrice && maxPrice != "" && minPrice != "") {
+      // returning filtered hotels from RateHawk API and DB
 
-      //     return parseInt(item.price) <= parseInt(maxPrice) && parseInt(item.price) >= parseInt(minPrice)
-      //   } if (name && name != "" && !location) {
-      //     return item.hotelName == name
-      //   } if (location && location != "" && !name) {
-      //     return item.location == location
-      //   } if (name && location && name != "" && location != "") {
-      //     return item.hotelName == name && item.location == location
-      //   }
-      // })
-
-      if (filteredHotelsDB.length == 0) {
+      if (filteredHotelsDB.length == 0 && AllApiHotels.length == 0) {
+        console.log("No hotels found in DB and API");
+        return res.json({ status: false, hotels: [], externalHotels: [] });
+      }
+      if (filteredHotelsDB.length == 0 && AllApiHotels.length != 0) {
+        console.log("Hotel found in API only");
         return res.json({
-          status: false,
-          message: errorMessages.noDataFound,
+          status: true,
+          hotels: [],
+          externalHotels: AllApiHotels,
         });
       }
-      res.json({ status: true, hotels: filteredHotelsDB });
+      if (filteredHotelsDB.length != 0 && AllApiHotels.length == 0) {
+        console.log("Hotel found in DB only");
+        return res.json({
+          status: true,
+          hotels: filteredHotelsDB,
+          externalHotels: [],
+        });
+      }
+      if (filteredHotelsDB.length != 0 && AllApiHotels.length != 0) {
+        console.log("Hotel found in both DB and API");
+        return res.json({
+          status: true,
+          hotels: filteredHotelsDB,
+          externalHotels: AllApiHotels,
+        });
+      }
     } catch (error) {
       console.error(error);
-      return res
-        .status(500)
-        .json({ status: false, error: errorMessages.internalServerError });
+      return res.status(500).json({ status: false, error: "Faced Some Error" });
     }
+
+    // let response
+    // const options = {
+    //   method: 'GET',
+    //   url: 'https://booking-com13.p.rapidapi.com/stays/properties/list-v2',
+    //   params: {
+    //     location: 'France',
+    //     checkin_date: '2024-02-09',
+    //     checkout_date: '2024-02-10',
+    //     language_code: 'en-us',
+    //     currency_code: 'USD'
+    //   },
+    //   headers: {
+    //     'X-RapidAPI-Key': '4c950a4ca5msh959e74b886a4c78p1c992bjsnd97091aca10c',
+    //     'X-RapidAPI-Host': 'booking-com13.p.rapidapi.com'
+    //   }
+    // };
+
+    // try {
+    //   response = await axios.request(options);
+    // } catch (error) {
+    //   console.error(error);
+    // }
+
+    // const hotelsFromAPI = []
+    // console.log(response)
+    // const data = response.data?.data?.length
+
+    // for (let i = 0; i < data; i++) {
+
+    //   if (hotelsFromAPI && Array.isArray(hotelsFromAPI)) {
+    //     hotelsFromAPI.push({
+    //       idDetail: response.data?.data[i]?.idDetail,
+    //       hotelName: response.data?.data[i]?.displayName?.text,
+    //       location: response.data?.data[i]?.basicPropertyData.location?.address + ", " + response.data?.data[i]?.basicPropertyData.location?.city,
+    //       price: response.data?.data[i]?.priceDisplayInfoIrene?.displayPrice?.amountPerStay?.amountRounded.replace("$", "").replace(",", ""),
+    //       priceCurrency: response.data?.data[i]?.priceDisplayInfoIrene?.displayPrice?.amountPerStay?.currency
+    //     })
+    //   }
+
+    // }
+
+    // const filteredHotelsAPI = hotelsFromAPI.filter(item => {
+    //   if (minPrice && minPrice != "" && !maxPrice) {
+
+    //     return parseInt(item.price) >= parseInt(minPrice)
+    //   } if (maxPrice && maxPrice != "" && !minPrice) {
+
+    //     return parseInt(item.price) <= parseInt(maxPrice)
+    //   } if (maxPrice && minPrice && maxPrice != "" && minPrice != "") {
+
+    //     return parseInt(item.price) <= parseInt(maxPrice) && parseInt(item.price) >= parseInt(minPrice)
+    //   } if (name && name != "" && !location) {
+    //     return item.hotelName == name
+    //   } if (location && location != "" && !name) {
+    //     return item.location == location
+    //   } if (name && location && name != "" && location != "") {
+    //     return item.hotelName == name && item.location == location
+    //   }
+    // })
   },
 
   async hotelVideoStream(req, res) {
@@ -539,11 +592,10 @@ module.exports = {
   // get all hotels
 
   async getAllHotels(req, res) {
-
     const userPrincipal = req.query.userPrincipal; // replace with user principal from frontend header like req.header("userPrincipal")
 
     try {
-      const hotels = await Hotels.findAll({ where: { userPrincipal }});
+      const hotels = await Hotels.findAll({ where: { userPrincipal } });
       if (hotels.length == 0) {
         return res.json({
           status: false,
@@ -573,10 +625,9 @@ module.exports = {
         .json({ status: false, message: errorMessages.hotelNotFound });
     }
 
-    await hotel.destroy()
-    .then(() => {
+    await hotel.destroy().then(() => {
       console.log("Hotel deleted successfully");
-    })
+    });
 
     res.json({ status: true, message: successMessages.hotelDeleted });
   },
@@ -614,7 +665,7 @@ module.exports = {
       updateFields.videoUrls = videoUrls;
     }
     if (location) {
-      updateFields.location = location
+      updateFields.location = location;
     }
     if (amenities) {
       updateFields.amenities = amenities;
@@ -625,7 +676,6 @@ module.exports = {
     if (paymentMethods) {
       updateFields.paymentMethods = paymentMethods;
     }
-    
 
     // Finding and updating the hotel in postgres
     const hotel = await Hotels.findOne({ where: { hotelId } });
@@ -637,7 +687,8 @@ module.exports = {
     }
     if (hotel) {
       await hotel.update({
-        ...updateFields, updatedAt: new Date()
+        ...updateFields,
+        updatedAt: new Date(),
       });
 
       console.log("Hotel updated successfully");
@@ -669,100 +720,4 @@ module.exports = {
       return res.json({ status: true, message: successMessages.hotelUpdated });
     }
   },
-
-  // rate hawk api's for hotel
-
-  // search hotel
-  async searchHotel(req, res) {
-    const { query, language } = req.body;
-
-    const postData = {
-      query: query,
-      language: language,
-    };
-
-    await axios
-      .post(RateHawkUrls.searchUrl,
-        postData,
-        {
-          auth: {
-            username: username,
-            password: password,
-          },
-        }
-      )
-      .then((response) => {
-        console.log("Response sent");
-        res.json({ status: true, data: response.data });
-      })
-      .catch((error) => {
-        console.error("Error:", error.message);
-      });
-  },
-
-  // get hotel info
-  async getHotelInfo(req, res) {
-    const { hotelId, language } = req.body;
-
-    const postData = {
-      id: hotelId,
-      language: language,
-    };
-
-    await axios
-      .post(RateHawkUrls.hotelInfoUrl,
-        postData,
-        {
-          auth: {
-            username: username,
-            password: password,
-          },
-        }
-      )
-      .then((response) => {
-        console.log("Response sent");
-        res.json({ status: true, data: response.data });
-      })
-      .catch((error) => {
-        console.error("Error:", error.message);
-      });
-  },
-
-  // book hotel - get booking hash
-  async bookHotel(req, res) {
-    const { hotelId, checkInDate, checkOutDate, adults, children } =
-      req.body;
-
-    const postData = {
-      id: hotelId,
-      checkin: checkInDate,
-      checkout: checkOutDate,
-      language: "en",
-      guests: [
-        {
-          adults: adults,
-          children: children,
-        },
-      ],
-    };
-
-    await axios
-      .post(RateHawkUrls.hotelBookUrl,
-        postData,
-        {
-          auth: {
-            username: username,
-            password: password,
-          },
-        }
-      )
-      .then((response) => {
-        console.log("Response sent");
-        res.json({ status: true, data: response.data });
-      })
-      .catch((error) => {
-        console.error("Error:", error.message);
-      });
-  },
-
 };

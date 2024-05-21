@@ -10,15 +10,15 @@ const routes = require("./routes");
 _ = require("underscore");
 
 const app = express();
-app.use(cors(
-  {
+app.use(
+  cors({
     origin: "*",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     preflightContinue: false,
     optionsSuccessStatus: 204,
     allowedHeaders: ["Content-Type", "Authorization"],
-  }
-));
+  })
+);
 
 const PORT = process.env.PORT || 5000;
 
@@ -26,9 +26,10 @@ app.use(express.json());
 app.use("/api/v1", routes.userRoutes);
 app.use("/api/v1", routes.chatRoute);
 app.use("/api/v1", routes.hotelRoutes);
+app.use("/api/v1", routes.rateHawkRoutes);
 
-app.get('/', (req, res) => {
-  res.send('Welcome to the homepage');
+app.get("/", (req, res) => {
+  res.send("Welcome to the homepage");
 });
 
 module.exports = app;

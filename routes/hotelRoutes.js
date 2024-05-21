@@ -9,9 +9,6 @@ const {
   deleteHotel,
   updateHotel,
   updateHotelAvailbility,
-  searchHotel,
-  getHotelInfo,
-  bookHotel,
   getAllHotels
 } = require("../controller/hotelController");
 const validateUser = require("../middleware/auth");
@@ -38,11 +35,6 @@ route.put("/hotel/updateHotel", updateHotel);
 route.put("/hotel/updateHotelAvailbility", updateHotelAvailbility);
 route.get("/hotel/getAllHotels", getAllHotels);
 
-// ratehawk api
-
-route.post("/hotel/RateHawk/searchHotel", searchHotel ); 
-route.post("/hotel/RateHawk/getHotelInfo", getHotelInfo ); 
-route.post("/hotel/RateHawk/bookHotel", bookHotel ); 
 
 
 module.exports = route;
