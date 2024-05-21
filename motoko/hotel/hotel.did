@@ -1,4 +1,4 @@
-type anon_class_9_1 = 
+type _anon_class_10_1 = 
  service {
    addOwner: (text) -> (text);
    checkHotelExist: (text) -> (bool) query;
@@ -6,9 +6,15 @@ type anon_class_9_1 =
    deleteHotel: (HotelId) -> (text);
    getAllAdmin: () -> (vec AdminId) query;
    getHotel: (HotelId) -> (opt HotelInfo) query;
+   getHotelAvailabilty: (HotelId) ->
+    (opt record {
+           hotelAvailableFrom: text;
+           hotelAvailableTill: text;
+         }) query;
    getHotelFrequencyByYear: (text) -> (opt AnnualData) query;
    getHotelId: () -> (vec HotelId) query;
    getNoOfPages: (nat) -> (nat) query;
+   getTime: () -> (int) query;
    scanHotel: (nat, nat) -> (vec record {
                                    HotelId;
                                    HotelInfo;
@@ -19,11 +25,14 @@ type anon_class_9_1 =
 type HotelInfo = 
  record {
    createdAt: text;
+   hotelAvailableFrom: text;
+   hotelAvailableTill: text;
    hotelDes: text;
    hotelImage: text;
    hotelLocation: text;
    hotelPrice: text;
    hotelTitle: text;
+   updatedAt: opt text;
  };
 type HotelId = text;
 type AnnualData = 
@@ -42,4 +51,4 @@ type AnnualData =
    sep: nat;
  };
 type AdminId = text;
-service : () -> anon_class_9_1
+service : () -> _anon_class_10_1

@@ -6,10 +6,11 @@ const {
 } = require("@dfinity/identity");
 const errorMessages = require("../config/errorMessages.json");
 const { toHex, fromHex, HttpAgent } = require("@dfinity/agent");
-const { backend, createActor } = require("../motoko/backend");
+// const { backend, createActor } = require("../motoko/backend");
+const {hotel,createActor}=require("../motoko/hotel")
 const crypto = require("crypto");
 
-let backendCanister = backend;
+let backendCanister = hotel;
 
 module.exports = {
   async delegationValidation(pubKey, priKey, delegation) {
@@ -65,17 +66,18 @@ module.exports = {
         host: process.env.ICP_HOST,
       });
 
-      console.log("agent", agent);
+      // console.log("agent", agent);
 
-      backendCanister = createActor(process.env.BACKEND_CANISTER_ID, {
+      backendCanister = createActor(process.env.HOTEL_CANISTER_ID, {
         agent,
       });
-      console.log("backendCanister", backendCanister);
+      // console.log("backendCanister", backendCanister);
 
-      console.log("middleIdentity", middleIdentity.getPrincipal().toString());
+      // console.log("middleIdentity", middleIdentity.getPrincipal().toString());
 
       let principal = await backendCanister.whoami();
       console.log("principal", principal);
+      console.log(process.env.ICP_HOST)
       return {
         principal,
         backendCanister,

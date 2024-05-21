@@ -25,7 +25,7 @@ const Hotels = sequelize.define("Hotel", {
   priceCurrency: {
     type: DataTypes.ENUM("USDT", "ICP", "ckBTC", "INR", "ETH"),
     allowNull: false,
-    defaultValue: "ICP",
+    defaultValue: "USDT",
   },
   imagesUrls: {
     type: DataTypes.TEXT,
