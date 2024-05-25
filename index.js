@@ -29,7 +29,7 @@ app.use("/api/v1", routes.hotelRoutes);
 app.use("/api/v1", routes.rateHawkRoutes);
 
 app.get("/", (req, res) => {
-  res.send("Welcome to the homepage");
+  res.send("Welcome to the homepage of RentSpace Node Server");
 });
 
 module.exports = app;
