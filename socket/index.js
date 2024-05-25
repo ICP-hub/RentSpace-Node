@@ -150,7 +150,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("disconnect", () => {
+  socket.on("disconnect", (userPrincipal) => {
     console.log(`User disconnected: ${socket.id}`);
     delete principalSocketMap[userPrincipal];
   });
