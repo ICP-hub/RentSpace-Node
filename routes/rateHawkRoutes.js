@@ -4,9 +4,11 @@ const {
   getHotelInfo,
   bookHotel,
   checkhash,
+//   ---------------------
   orderBookingForm,
   crediCardTokenization,
   orderBookFinish,
+  orderBookFinishStatus
 } = require("../controller/rateHawkController");
 
 // ratehawk api
@@ -18,5 +20,6 @@ route.post("/hotel/RateHawk/checkhash", checkhash);
 route.post("/hotel/RateHawk/orderBookingForm", orderBookingForm);
 route.post("/hotel/RateHawk/crediCardTokenization", crediCardTokenization);
 route.post("/hotel/RateHawk/orderBookFinish", orderBookFinish);
+route.post("/hotel/RateHawk/orderBookFinishStatus", orderBookFinishStatus);
 
 module.exports = route;

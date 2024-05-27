@@ -42,17 +42,31 @@ module.exports = {
         hotelIdList.push(hotel.id);
       });
 
+      console.log("Query :", query);
       console.log("Hotel Id List:", hotelIdList);
 
       // traverse each item in hotels array and add hotel id in hotelIdList
-
       for (let i = 0; i < hotels.length; i++) {
-        // console.log("Hotel Id:", hotels[i].id);
+        console.log("Hotel Id:", hotels[i].id);
+
+        const date = new Date();
+        const day = date.getDate();
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+
+        const checkInDate = `${year}-0${month}-${day}`;
+        // const checkOutDate = `${year}-0${month+1}-${day}`;
+        // check out date is 15 days from check in date also deal with month end date
+
+
+        console.log("Check In Date:", checkInDate);
+        // console.log("Check Out Date:", checkOutDate);
+        // console.log("Check Out Date:", checkOutDate);
 
         const postData = {
           id: hotels[i].id,
-          checkin: "2024-05-25",
-          checkout: "2024-06-10",
+          checkin: checkInDate,
+          checkout: "2024-06-07",
           language: "en",
           guests: [
             {
@@ -140,7 +154,7 @@ module.exports = {
         },
       })
       .then((response) => {
-        console.log("Response sent");
+        console.log("Response sent for Rate Hawk Book Hotel");
         // console.log(response.data.data.hotels[0].rates[0].book_hash);
         res.json({ status: true, data: response.data });
       })
@@ -350,4 +364,28 @@ module.exports = {
         console.error("Error:", error.message);
       });
   },
+
+
+  // order book finish status function
+
+  async orderBookFinishStatus(req,res){
+    const {partner_order_id} = req.body;
+
+    await axios
+    .post("https://api.worldota.net/api/b2b/v3/hotel/order/booking/finish/status/", {partner_order_id}, {
+      auth: {
+        username: username,
+        password: password,
+      },
+    })
+    .then((response) => {
+      console.log("Response sent for order book finish status");
+      res.json({ status: true, data: response.data });
+    })
+    .catch((error) => {
+      console.error("Error:", error.message);
+    });
+  }
+
+
 };

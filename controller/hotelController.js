@@ -290,9 +290,13 @@ module.exports = {
         pageSize = 10,
         amenities,
         propertyType,
+        latitude,
+        longitude,
       } = req.query;
 
-      console.log("Location : ", location);
+      // console.log("Location : ", location);
+      // console.log("Latitude : ", latitude);
+      // console.log("Longitude : ", longitude);
       // console.log(req.query);
 
       // Define conditions for filtering
@@ -306,12 +310,30 @@ module.exports = {
       var final = `${year}-${month}-${day + 1}`;
       var currentDate = new Date(final);
 
+      const radius = appConstant.RADIUS_IN_10_KM;
+      // Calculate the latitude and longitude boundaries
+      const latBoundary = (Number(radius) / appConstant.EARTH_RADIUS_IN_KM) * (180 / Math.PI);
+      const lonBoundary = ((Number(radius) / appConstant.EARTH_RADIUS_IN_KM) * (180 / Math.PI)) / Math.cos((latitude * Math.PI) / 180);
+
+      // console.log("Latitude Boundary : ", latBoundary);
+      // console.log("Longitude Boundary : ", lonBoundary);
+
+      // checking conditions for latitude and longitude
+      if (latitude && longitude) {
+        conditions.latitude = {
+          [Op.between]: [+latitude - latBoundary, +latitude + latBoundary],
+        };
+        conditions.longitude = {
+          [Op.between]: [+longitude - lonBoundary, +longitude + lonBoundary],
+        };
+      }
+
       if (name) {
         conditions.hotelName = { [Op.iLike]: `%${name}%` }; // Case-insensitive partial match
       }
-      if (location) {
-        conditions.location = { [Op.iLike]: `%${location}%` }; // Case-insensitive partial match
-      }
+      // if (location) {
+      //   conditions.location = { [Op.iLike]: `%${location}%` }; // Case-insensitive partial match
+      // }
       if (minPrice || maxPrice) {
         conditions.price = {};
         if (minPrice) {
@@ -340,6 +362,7 @@ module.exports = {
           [Op.gte]: currentDate,
         };
       }
+
 
       // Calculate offset based on pagination parameters
       const offset = (page - 1) * pageSize;
