@@ -58,7 +58,6 @@ module.exports = {
         // const checkOutDate = `${year}-0${month+1}-${day}`;
         // check out date is 15 days from check in date also deal with month end date
 
-
         console.log("Check In Date:", checkInDate);
         // console.log("Check Out Date:", checkOutDate);
         // console.log("Check Out Date:", checkOutDate);
@@ -76,22 +75,24 @@ module.exports = {
           ],
         };
 
-        await axios
-          .post(RateHawkUrls.hotelBookUrl, postData, {
-            auth: {
-              username: username,
-              password: password,
-            },
-          })
-          .then((response) => {
-            if (response?.data?.data?.hotels[0]?.rates[0]?.book_hash) {
-              finalHotelList.push(hotels[i]);
+        try {
+          const hotelResponse = await axios.post(
+            RateHawkUrls.hotelBookUrl,
+            postData,
+            {
+              auth: {
+                username: username,
+                password: password,
+              },
             }
-          })
-          .catch((error) => {
-            console.error("Error:", error.message);
-            console.log("Error in hash check response");
-          });
+          );
+          if (hotelResponse?.data?.data?.hotels[0]?.rates[0]?.book_hash) {
+            finalHotelList.push(hotels[i]);
+          }
+        } catch (error) {
+          console.error("Error:", error.message);
+          console.log("Error in hash check response");
+        }
       }
 
       console.log("Final Hotel List Outer :", finalHotelList);
@@ -111,23 +112,20 @@ module.exports = {
       language: language,
     };
 
-    await axios
-      .post(RateHawkUrls.hotelInfoUrl, postData, {
+    try {
+      const response = await axios.post(RateHawkUrls.hotelInfoUrl, postData, {
         auth: {
           username: username,
           password: password,
         },
-      })
-      .then((response) => {
-        console.log("Response sent");
-        res.json({ status: true, data: response.data });
-      })
-      .catch((error) => {
-        console.error("Error:", error.message);
       });
+      console.log("Response sent");
+      res.json({ status: true, data: response.data });
+    } catch (error) {
+      console.error("Error:", error.message);
+    }
   },
 
-  // book hotel - get booking hash
   async bookHotel(req, res) {
     const { hotelId, checkInDate, checkOutDate, adults, children } = req.body;
 
@@ -146,21 +144,20 @@ module.exports = {
 
     console.log(hotelId);
 
-    await axios
-      .post(RateHawkUrls.hotelBookUrl, postData, {
+    try {
+      const response = await axios.post(RateHawkUrls.hotelBookUrl, postData, {
         auth: {
           username: username,
           password: password,
         },
-      })
-      .then((response) => {
-        console.log("Response sent for Rate Hawk Book Hotel");
-        // console.log(response.data.data.hotels[0].rates[0].book_hash);
-        res.json({ status: true, data: response.data });
-      })
-      .catch((error) => {
-        console.error("Error:", error.message);
       });
+      console.log("Response sent for Rate Hawk Book Hotel");
+      // console.log(response.data.data.hotels[0].rates[0].book_hash);
+      console.log(response.data);
+      res.json({ status: true, data: response.data });
+    } catch (error) {
+      console.error("Error:", error.message);
+    }
   },
 
   // API endpoint to check if hash is available for hotel {for manual testing purpose, not used in frontend integration}
@@ -182,36 +179,43 @@ module.exports = {
 
     console.log(hotelId);
 
-    await axios
-      .post(RateHawkUrls.hotelBookUrl, postData, {
-        auth: {
-          username: username,
-          password: password,
-        },
-      })
-      .then((response) => {
-        if (response?.data?.data?.hotels[0]?.rates[0]?.book_hash) {
-          console.log("Hash Available for hotel id:", hotelId);
-          res.json({ status: true, message: "Hash available for this hotel" });
-        } else {
-          console.log("Hash not available for hotel id:", hotelId);
-          res.json({
-            status: false,
-            message: "Hash not available for this hotel",
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("Error:", error.message);
-        console.log("Error in hash check response");
-        res.json({ status: false, msg: error.message });
-      });
+    try {
+      await axios
+        .post(RateHawkUrls.hotelBookUrl, postData, {
+          auth: {
+            username: username,
+            password: password,
+          },
+        })
+        .then((response) => {
+          if (response?.data?.data?.hotels[0]?.rates[0]?.book_hash) {
+            console.log("Hash Available for hotel id:", hotelId);
+            res.json({
+              status: true,
+              message: "Hash available for this hotel",
+            });
+          } else {
+            console.log("Hash not available for hotel id:", hotelId);
+            res.json({
+              status: false,
+              message: "Hash not available for this hotel",
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error.message);
+          console.log("Error in hash check response");
+          res.json({ status: false, msg: error.message });
+        });
+    } catch (error) {
+      console.error("Error:", error.message);
+      res.json({ status: false, msg: error.message });
+    }
   },
 
   // -----------------------------------------------
 
   // order booking form function
-
   async orderBookingForm(req, res) {
     const { book_hash, language, user_ip } = req.body;
 
@@ -226,47 +230,49 @@ module.exports = {
       user_ip: user_ip,
     };
 
-    await axios
-      .post(
-        "https://api.worldota.net/api/b2b/v3/hotel/order/booking/form/",
-        postData,
-        {
-          auth: {
-            username: username,
-            password: password,
-          },
-        }
-      )
-      .then((response) => {
-        console.log("Response sent for order booking form");
-
-        const payment_type = [];
-
-        response.data.data.payment_types.forEach((item) => {
-          if (item.currency_code === "USD") {
-            payment_type.push(item);
+    try {
+      await axios
+        .post(
+          "https://api.worldota.net/api/b2b/v3/hotel/order/booking/form/",
+          postData,
+          {
+            auth: {
+              username: username,
+              password: password,
+            },
           }
-        });
+        )
+        .then((response) => {
+          console.log("Response sent for order booking form");
 
-        // console.log("Payment Type:", payment_type);
+          const payment_type = [];
 
-        // res.json({ status: true, data: response.data});
-        res.json({
-          status: true,
-          data: {
-            item_id: response.data.data.item_id,
-            partner_order_id: partner_order_id,
-            payment_type: payment_type,
-          },
+          response.data.data.payment_types.forEach((item) => {
+            if (item.currency_code === "USD") {
+              payment_type.push(item);
+            }
+          });
+
+          res.json({
+            status: true,
+            data: {
+              item_id: response.data.data.item_id,
+              partner_order_id: partner_order_id,
+              payment_type: payment_type,
+            },
+          });
+        })
+        .catch((error) => {
+          console.error("Error:", error.message);
+          res.json({ status: false, msg: error.message });
         });
-      })
-      .catch((error) => {
-        console.error("Error:", error.message);
-      });
+    } catch (error) {
+      console.error("Error:", error.message);
+      res.json({ status: false, msg: error.message });
+    }
   },
 
   // Credit card tokenization function
-
   async crediCardTokenization(req, res) {
     const {
       object_id,
@@ -303,28 +309,33 @@ module.exports = {
       },
     };
 
-    await axios
-      .post(
-        "https://api.payota.net/api/public/v1/manage/init_partners",
-        postData,
-        {
-          auth: {
-            username: username,
-            password: password,
-          },
-        }
-      )
-      .then((response) => {
-        console.log("Response sent for credit card tokenization");
-        res.json({ status: true, data: response.data, pay_uuid, init_uuid });
-      })
-      .catch((error) => {
-        console.error("Error:", error.message);
-      });
+    try {
+      await axios
+        .post(
+          "https://api.payota.net/api/public/v1/manage/init_partners",
+          postData,
+          {
+            auth: {
+              username: username,
+              password: password,
+            },
+          }
+        )
+        .then((response) => {
+          console.log("Response sent for credit card tokenization");
+          res.json({ status: true, data: response.data, pay_uuid, init_uuid });
+        })
+        .catch((error) => {
+          console.error("Error:", error.message);
+          res.json({ status: false, msg: error.message });
+        });
+    } catch (error) {
+      console.error("Error:", error.message);
+      res.json({ status: false, msg: error.message });
+    }
   },
 
   // Order Book Finish function
-
   async orderBookFinish(req, res) {
     const {
       email,
@@ -345,47 +356,59 @@ module.exports = {
       return_path: return_path,
     };
 
-    await axios
-      .post(
-        "https://api.worldota.net/api/b2b/v3/hotel/order/booking/finish/",
-        postData,
-        {
-          auth: {
-            username: username,
-            password: password,
-          },
-        }
-      )
-      .then((response) => {
-        console.log("Response sent for order book finish");
-        res.json({ status: true, data: response.data });
-      })
-      .catch((error) => {
-        console.error("Error:", error.message);
-      });
+    try {
+      await axios
+        .post(
+          "https://api.worldota.net/api/b2b/v3/hotel/order/booking/finish/",
+          postData,
+          {
+            auth: {
+              username: username,
+              password: password,
+            },
+          }
+        )
+        .then((response) => {
+          console.log("Response sent for order book finish");
+          res.json({ status: true, data: response.data });
+        })
+        .catch((error) => {
+          console.error("Error:", error.message);
+          res.json({ status: false, msg: error.message });
+        });
+    } catch (error) {
+      console.error("Error:", error.message);
+      res.json({ status: false, msg: error.message });
+    }
   },
 
-
   // order book finish status function
+  async orderBookFinishStatus(req, res) {
+    const { partner_order_id } = req.body;
 
-  async orderBookFinishStatus(req,res){
-    const {partner_order_id} = req.body;
-
-    await axios
-    .post("https://api.worldota.net/api/b2b/v3/hotel/order/booking/finish/status/", {partner_order_id}, {
-      auth: {
-        username: username,
-        password: password,
-      },
-    })
-    .then((response) => {
-      console.log("Response sent for order book finish status");
-      res.json({ status: true, data: response.data });
-    })
-    .catch((error) => {
+    try {
+      await axios
+        .post(
+          "https://api.worldota.net/api/b2b/v3/hotel/order/booking/finish/status/",
+          { partner_order_id },
+          {
+            auth: {
+              username: username,
+              password: password,
+            },
+          }
+        )
+        .then((response) => {
+          console.log("Response sent for order book finish status");
+          res.json({ status: true, data: response.data });
+        })
+        .catch((error) => {
+          console.error("Error:", error.message);
+          res.json({ status: false, msg: error.message });
+        });
+    } catch (error) {
       console.error("Error:", error.message);
-    });
-  }
-
-
+      res.json({ status: false, msg: error.message });
+    }
+  },
 };

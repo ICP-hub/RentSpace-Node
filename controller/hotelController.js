@@ -35,7 +35,7 @@ module.exports = {
         paymentMethods,
         phantomWalletID,
         vidFiles,
-        imgFiles
+        imgFiles,
       } = req.body;
 
       console.log("req.files", req.body);
@@ -50,7 +50,7 @@ module.exports = {
         _.isEmpty(latitude) ||
         _.isEmpty(longitude)
       ) {
-        console.log("empty")
+        console.log("empty");
         return res
           .status(400)
           .json({ status: false, error: errorMessages.invalidData });
@@ -152,11 +152,10 @@ module.exports = {
       //   }
       // }
 
-      
       const requestedAmenities = amenities.split(",");
       const acceptedPaymentMethods = paymentMethods.split(",");
-      const newImgFiles=imgFiles.split(',')
-      const newVidFiles=vidFiles.split(',')
+      const newImgFiles = imgFiles.split(",");
+      const newVidFiles = vidFiles.split(",");
 
       const currentDate = new Date();
 
@@ -177,27 +176,30 @@ module.exports = {
         hotelPrice: hotelPrice.toString(),
         hotelLocation: hotelLocation,
         createdAt: currentDate.toString(),
-        hotelAvailableFrom:currentDate.toString(),
-        hotelAvailableTill:oneMonthAfterDate.toString(),
-        updatedAt:[]
+        hotelAvailableFrom: currentDate.toString(),
+        hotelAvailableTill: oneMonthAfterDate.toString(),
+        updatedAt: [],
       };
 
       const hotelId = await req.hotelCanister.createHotel(hotelData);
-      
 
       await Hotels.create({
-        hotelId: hotelId, 
+        hotelId: hotelId,
         hotelName: hotelTitle,
         hotelDescription: hotelDes,
         userPrincipal: principal,
         price: hotelPrice,
         priceCurrency: priceCurrency ? priceCurrency : "USDT", // get it from frontend this is hardcoded for now for testing
-        imagesUrls: newImgFiles ? newImgFiles.toString() : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelImage%2FFreeVector-Seaside-Hotel-Vector.jpg?alt=media&token=ba2925c4-a339-4789-b1c8-eefff2bba27f",
-        videoUrls: newVidFiles ? newVidFiles.toString() : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelVideo%2FWhite%20Brown%20Modern%20Minimalist%20Real%20Estate%20Open%20House%20Video.mp4?alt=media&token=2ea7cc7c-0790-4f85-bfc8-4745662f4d8f", // get it from frontend
+        imagesUrls: newImgFiles
+          ? newImgFiles.toString()
+          : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelImage%2FFreeVector-Seaside-Hotel-Vector.jpg?alt=media&token=ba2925c4-a339-4789-b1c8-eefff2bba27f",
+        videoUrls: newVidFiles
+          ? newVidFiles.toString()
+          : "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelVideo%2FWhite%20Brown%20Modern%20Minimalist%20Real%20Estate%20Open%20House%20Video.mp4?alt=media&token=2ea7cc7c-0790-4f85-bfc8-4745662f4d8f", // get it from frontend
         location: hotelLocation,
         latitude: latitude,
         longitude: longitude,
-        likedBy: [], 
+        likedBy: [],
         amenities: requestedAmenities,
         propertyType: propertyType,
         paymentMethods: acceptedPaymentMethods,
@@ -312,8 +314,11 @@ module.exports = {
 
       const radius = appConstant.RADIUS_IN_10_KM;
       // Calculate the latitude and longitude boundaries
-      const latBoundary = (Number(radius) / appConstant.EARTH_RADIUS_IN_KM) * (180 / Math.PI);
-      const lonBoundary = ((Number(radius) / appConstant.EARTH_RADIUS_IN_KM) * (180 / Math.PI)) / Math.cos((latitude * Math.PI) / 180);
+      const latBoundary =
+        (Number(radius) / appConstant.EARTH_RADIUS_IN_KM) * (180 / Math.PI);
+      const lonBoundary =
+        ((Number(radius) / appConstant.EARTH_RADIUS_IN_KM) * (180 / Math.PI)) /
+        Math.cos((latitude * Math.PI) / 180);
 
       // console.log("Latitude Boundary : ", latBoundary);
       // console.log("Longitude Boundary : ", lonBoundary);
@@ -363,7 +368,6 @@ module.exports = {
         };
       }
 
-
       // Calculate offset based on pagination parameters
       const offset = (page - 1) * pageSize;
 
@@ -381,7 +385,6 @@ module.exports = {
       var AllApiHotels = [];
 
       if (!isEmpty(location) && !isEmpty(name)) {
-
         const searchString = name + " " + location;
 
         console.log("Searched Hotels from RateHawk API : " + searchString);
@@ -592,26 +595,32 @@ module.exports = {
   },
 
   async getLikesOnHotel(req, res) {
-    const hotelId = req.query.hotelId;
-    console.log(hotelId);
+    try {
+      const hotelId = req.query.hotelId;
+      console.log(hotelId);
 
-    const hotelData = await Hotels.findOne({ where: { hotelId } });
+      const hotelData = await Hotels.findOne({ where: { hotelId } });
 
-    if (!hotelData) {
+      if (!hotelData) {
+        return res
+          .status(400)
+          .json({ status: false, message: errorMessages.hotelNotFound });
+      }
+
+      res.json({ status: true, numberOfLikes: hotelData.likedBy?.length });
+    } catch (err) {
+      console.log(err);
       return res
-        .status(400)
-        .json({ status: false, message: errorMessages.hotelNotFound });
+        .status(500)
+        .json({ status: false, message: errorMessages.internalServerError });
     }
-
-    res.json({ status: true, numberOfLikes: hotelData.likedBy?.length });
   },
 
   // get all hotels
 
   async getAllHotels(req, res) {
-    const userPrincipal = req.query.userPrincipal; // replace with user principal from frontend header like req.header("userPrincipal")
-
     try {
+      const userPrincipal = req.query.userPrincipal; // replace with user principal from frontend header like req.header("userPrincipal")
       const hotels = await Hotels.findAll({ where: { userPrincipal } });
       if (hotels.length == 0) {
         return res.json({
@@ -634,34 +643,21 @@ module.exports = {
     try {
       const hotelId = req.query.hotelId;
       console.log(hotelId);
-      console.log(req.hotelCanister)
-
+      console.log(req.hotelCanister);
 
       const hotel = await Hotels.findOne({ where: { hotelId } });
 
-      // if (!hotel) {
-      //   return res
-      //     .status(400)
-      //     .json({ status: false, message: errorMessages.hotelNotFound });
-      // }
 
-      await req.hotelCanister.deleteHotel(hotelId)
-      await hotel.destroy()
-      console.log("Hotel deleted successfully");
+      await req.hotelCanister.deleteHotel(hotelId);
+      await hotel.destroy();
+      console.log("Hotel deleted successfully from canister");
       res.json({ status: true, message: successMessages.hotelDeleted });
-
     } catch (error) {
       console.error(error);
       return res
         .status(500)
         .json({ status: false, error: errorMessages.internalServerError });
     }
-
-    await hotel.destroy().then(() => {
-      console.log("Hotel deleted successfully");
-    });
-
-    res.json({ status: true, message: successMessages.hotelDeleted });
   },
 
   // update hotel by hotelId
@@ -679,9 +675,9 @@ module.exports = {
         propertyType,
         paymentMethods,
       } = req.body;
-  
+
       const updateFields = {};
-  
+
       if (hotelName) {
         updateFields.hotelName = hotelName;
       }
@@ -698,7 +694,7 @@ module.exports = {
         updateFields.videoUrls = videoUrls;
       }
       if (location) {
-        updateFields.location = location
+        updateFields.location = location;
       }
       if (amenities) {
         updateFields.amenities = amenities;
@@ -709,25 +705,32 @@ module.exports = {
       if (paymentMethods) {
         updateFields.paymentMethods = paymentMethods;
       }
-      
-  
+
       // Finding and updating the hotel in postgres
       const hotel = await Hotels.findOne({ where: { hotelId } });
-  
+
       const hotelData = {
-        hotelTitle: (updateFields.hotelName)?updateFields.hotelName:hotel.hotelName,
-        hotelDes: (updateFields.hotelDescription)?updateFields.hotelDescription:hotel.hotelDescription,
+        hotelTitle: updateFields.hotelName
+          ? updateFields.hotelName
+          : hotel.hotelName,
+        hotelDes: updateFields.hotelDescription
+          ? updateFields.hotelDescription
+          : hotel.hotelDescription,
         hotelImage: "img",
-        hotelPrice:(updateFields.price)?updateFields.price.toString():hotel.price.toString(),
-        hotelLocation: (updateFields.location)?updateFields.location:hotel.location,
+        hotelPrice: updateFields.price
+          ? updateFields.price.toString()
+          : hotel.price.toString(),
+        hotelLocation: updateFields.location
+          ? updateFields.location
+          : hotel.location,
         createdAt: hotel.createdAt.toString(),
-        hotelAvailableFrom:hotel.availableFrom,
-        hotelAvailableTill:hotel.availableTill,
-        updatedAt:[]
+        hotelAvailableFrom: hotel.availableFrom,
+        hotelAvailableTill: hotel.availableTill,
+        updatedAt: [],
       };
-  
-      await req.hotelCanister.updateHotel(hotel.hotelId,hotelData);
-  
+
+      await req.hotelCanister.updateHotel(hotel.hotelId, hotelData);
+
       if (!hotel) {
         return res
           .status(400)
@@ -735,12 +738,16 @@ module.exports = {
       }
       if (hotel) {
         await hotel.update({
-          ...updateFields, updatedAt: new Date()
+          ...updateFields,
+          updatedAt: new Date(),
         });
-  
+
         console.log("Hotel updated successfully");
-  
-        return res.json({ status: true, message: successMessages.hotelUpdated });
+
+        return res.json({
+          status: true,
+          message: successMessages.hotelUpdated,
+        });
       }
     } catch (error) {
       console.error(error);
@@ -748,7 +755,6 @@ module.exports = {
         .status(500)
         .json({ status: false, error: errorMessages.internalServerError });
     }
-    
   },
 
   async updateHotelAvailbility(req, res) {
@@ -757,38 +763,39 @@ module.exports = {
 
       // Finding and updating the hotel in postgres
       const hotel = await Hotels.findOne({ where: { hotelId } });
-  
+
       if (!hotel) {
         return res
           .status(400)
           .json({ status: false, message: errorMessages.hotelNotFound });
       }
       if (hotel) {
-
-
         const hotelData = {
           hotelTitle: hotel.hotelName,
           hotelDes: hotel.hotelDescription,
           hotelImage: "img",
-          hotelPrice:hotel.price.toString(),
+          hotelPrice: hotel.price.toString(),
           hotelLocation: hotel.location,
           createdAt: hotel.createdAt.toString(),
-          hotelAvailableFrom:availableFrom.toString(),
-          hotelAvailableTill:availableTill.toString(),
-          updatedAt:[]
+          hotelAvailableFrom: availableFrom.toString(),
+          hotelAvailableTill: availableTill.toString(),
+          updatedAt: [],
         };
 
-        await req.hotelCanister.updateHotel(hotel.hotelId,hotelData);
+        await req.hotelCanister.updateHotel(hotel.hotelId, hotelData);
 
         await hotel.update({
           updatedAt: new Date(),
           availableFrom: availableFrom,
           availableTill: availableTill,
         });
-  
+
         console.log("Hotel availibility updated successfully");
-  
-        return res.json({ status: true, message: successMessages.hotelUpdated });
+
+        return res.json({
+          status: true,
+          message: successMessages.hotelUpdated,
+        });
       }
     } catch (error) {
       console.error(error);
@@ -796,6 +803,5 @@ module.exports = {
         .status(500)
         .json({ status: false, error: errorMessages.internalServerError });
     }
-   
   },
 };
