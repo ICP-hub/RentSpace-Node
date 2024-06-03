@@ -1,9 +1,6 @@
 const RateHawkUrls = require("../config/rateHawkUrls");
 const { default: axios } = require("axios");
 
-// const username = "7853"; // need to be hidden in production
-// const password = "f30da66d-f19c-49f8-832f-856340962343"; // need to be hidden in production
-
 const username = process.env.RATEHAWK_USERNAME; // rate hawk api's for hotel
 const password = process.env.RATEHAWK_PASSWORD;
 
@@ -50,22 +47,33 @@ module.exports = {
         console.log("Hotel Id:", hotels[i].id);
 
         const date = new Date();
-        const day = date.getDate();
-        const month = date.getMonth() + 1;
+        var day = date.getDate();
+        var month = date.getMonth() + 1;
         const year = date.getFullYear();
 
-        const checkInDate = `${year}-0${month}-${day}`;
-        // const checkOutDate = `${year}-0${month+1}-${day}`;
-        // check out date is 15 days from check in date also deal with month end date
+        var checkOutDay = day + 5;
+
+        if(day < 10){
+          day = `0${day}`;
+        }
+        if(month < 10){
+          month = `0${month}`;
+        }
+        if(checkOutDay < 10){
+          checkOutDay = `0${checkOutDay}`;
+        }
+
+      
+        var checkInDate = new Date(`${year}-${month}-${day}`).toISOString().slice(0, 10);
+        var checkOutDate = `${year}-${month}-${checkOutDay}`;
 
         console.log("Check In Date:", checkInDate);
-        // console.log("Check Out Date:", checkOutDate);
-        // console.log("Check Out Date:", checkOutDate);
+        console.log("Check Out Date:", checkOutDate);
 
         const postData = {
           id: hotels[i].id,
           checkin: checkInDate,
-          checkout: "2024-06-07",
+          checkout: checkOutDate,
           language: "en",
           guests: [
             {
@@ -102,7 +110,7 @@ module.exports = {
       console.error("Error:", error.message);
       return "Facing issue in fetching hotels. Please try again later.";
     }
-  },
+  }, 
 
   async getHotelInfo(req, res) {
     const { hotelId, language } = req.body;
