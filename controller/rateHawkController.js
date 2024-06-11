@@ -44,7 +44,7 @@ module.exports = {
 
       // traverse each item in hotels array and add hotel id in hotelIdList
       for (let i = 0; i < hotels.length; i++) {
-        console.log("Hotel Id:", hotels[i].id);
+        // console.log("Hotel Id:", hotels[i].id);
 
         const date = new Date();
         var day = date.getDate();
@@ -67,8 +67,8 @@ module.exports = {
         var checkInDate = new Date(`${year}-${month}-${day}`).toISOString().slice(0, 10);
         var checkOutDate = `${year}-${month}-${checkOutDay}`;
 
-        console.log("Check In Date:", checkInDate);
-        console.log("Check Out Date:", checkOutDate);
+        // console.log("Check In Date:", checkInDate);
+        // console.log("Check Out Date:", checkOutDate);
 
         const postData = {
           id: hotels[i].id,

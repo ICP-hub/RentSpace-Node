@@ -8,7 +8,8 @@ const {
   updateProperty,
   updatePropertyAvailability,
   getLikesOnProperty,
-  updateLikesOnProperty
+  updateLikesOnProperty,
+  getPropertyReelData
 
 } = require("../controller/propertyController");
 
@@ -20,5 +21,6 @@ route.put("/property/update", updateProperty);
 route.put("/property/updateAvailability", updatePropertyAvailability);
 route.get("/property/likes", getLikesOnProperty);
 route.put("/property/updateLikes", updateLikesOnProperty);
+route.get("/property/reelData", getPropertyReelData);
 
 module.exports = route;

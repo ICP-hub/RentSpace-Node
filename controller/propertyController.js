@@ -1,15 +1,9 @@
 const { Property } = require("../models/Property");
 const errorMessages = require("../config/errorMessages.json");
 const successMessages = require("../config/successMessages.json");
-const fs = require("fs");
-const { v4 } = require("uuid");
 const appConstant = require("../config/appConstant.json");
-const { uploadFileToGCS } = require("../utils/googleCloudUpload");
-const { deleteFileFromLocal } = require("../utils/deleteFileFromLocal");
 const { Op } = require("sequelize");
-const { User } = require("../models/User");
-const axios = require("axios");
-const { create, isEmpty, min } = require("underscore");
+const { isEmpty } = require("underscore");
 const crypto = require("crypto");
 
 const { searchHotel } = require("./rateHawkController");
@@ -21,7 +15,6 @@ module.exports = {
       // const principal = req.principal; // change to req.principal for app
 
       const {
-        propertyId,
         propertyName,
         propertyDescription,
         price,
@@ -37,11 +30,9 @@ module.exports = {
         propertyType,
         paymentMethods,
         phantomWalletID,
-        availableFrom,
-        availableTill,
-        createdAt,
-        updatedAt,
       } = req.body;
+
+      // console.log("Rooms => ",req.body.rooms);
 
       const hashTxt = principal + String(latitude) + String(longitude);
       console.log(hashTxt);
@@ -91,8 +82,8 @@ module.exports = {
         const year = currentDate.getFullYear();
         const oneMonthAfterDate = new Date(`${month + 1}/${day}/${year}`);
 
-        console.log("date : ", currentDate);
-        console.log("oneMonthAfter : ", oneMonthAfterDate);
+        // console.log("date : ", currentDate);
+        // console.log("oneMonthAfter : ", oneMonthAfterDate);
 
         const postData = {
           propertyId: hash,
@@ -158,7 +149,7 @@ module.exports = {
         longitude,
       } = req.query;
 
-      console.log("req.query", req.query);
+      // console.log("req.query", req.query);
 
       const conditions = {};
 
@@ -208,20 +199,20 @@ module.exports = {
       }
       if (amenities && amenities.length > 0) {
         const amenitiesArray = amenities.split(",");
-        console.log("req amen : ", requestedAmenities);
+        // console.log("req amen : ", requestedAmenities);
         conditions.amenities = {
           [Op.overlap]: [...requestedAmenities],
         };
       }
 
-      if (currentDate) {
-        conditions.availableFrom = {
-          [Op.lte]: currentDate,
-        };
-        conditions.availableTill = {
-          [Op.gte]: afterTwoDays,
-        };
-      }
+      // if (currentDate) {
+      //   conditions.availableFrom = {
+      //     [Op.lte]: currentDate,
+      //   };
+      //   conditions.availableTill = {
+      //     [Op.gte]: afterTwoDays,
+      //   };
+      // }
 
       // Calculate offset based on pagination parameters
       const offset = (page - 1) * pageSize;
@@ -240,21 +231,19 @@ module.exports = {
 
       var AllApiHotels = [];
 
-      if (!isEmpty(location) && !isEmpty(name)) {
-        const searchString = name + " " + location;
+      const searchString = name ? name : "hotel" + " " + location;
 
-        console.log("Searched Hotels from RateHawk API : " + searchString);
+      console.log("Searched Hotels from RateHawk API : " + searchString);
 
-        const apiHotels = await searchHotel({
-          query: searchString,
-          language: "en",
-        });
+      const apiHotels = await searchHotel({
+        query: searchString,
+        language: "en",
+      });
 
-        if (!isEmpty(apiHotels)) {
-          AllApiHotels = apiHotels;
-        } else {
-          AllApiHotels = [];
-        }
+      if (!isEmpty(apiHotels)) {
+        AllApiHotels = apiHotels;
+      } else {
+        AllApiHotels = [];
       }
 
       // returning filtered hotels from RateHawk API and DB
@@ -293,10 +282,10 @@ module.exports = {
 
   async getAllProperties(req, res) {
     try {
-      const userPrincipal = req.query.principal;
-      console.log("userPrincipal : ", userPrincipal);
+      const userPrincipal = req.query.userPrincipal;
       const properties = await Property.findAll({ where: { userPrincipal } });
       if (properties.length == 0) {
+        console.log("No properties found");
         return res.status(404).send({ message: "No properties found" });
       }
       return res.status(200).send({ properties });
@@ -338,6 +327,8 @@ module.exports = {
         paymentMethods,
         rooms,
       } = req.body;
+
+      console.log(req.body);
 
       const updateFields = {};
 
@@ -439,6 +430,8 @@ module.exports = {
     }
   },
 
+  // ------ Reel Functions ------
+
   async getLikesOnProperty(req, res) {
     try {
       const propertyId = req.query.propertyId;
@@ -463,24 +456,36 @@ module.exports = {
   async updateLikesOnProperty(req, res) {
     try {
       const { propertyId, userPrincipal } = req.body;
-      const property = await Property.findOne({ where: { propertyId } });
 
-      if (!property) {
-        return res.status(404).send({ message: "Property not found" });
-      }
-      if (property) {
-        const likedBy = property.likedBy;
-
-        if (likedBy.includes(userPrincipal)) {
-          const index = likedBy.indexOf(userPrincipal);
-          likedBy.splice(index, 1); // remove user from likedBy array if already liked
-        } else {
-          likedBy.push(userPrincipal); // add user to likedBy array if not liked
+      if (!isEmpty(propertyId) && !isEmpty(userPrincipal)) {
+        console.log(req.body);
+        const property = await Property.findOne({ where: { propertyId } });
+        if (!property) {
+          return res.status(404).send({ message: "Property not found" });
         }
+        if (property) {
+          const likedBy = property.likedBy;
 
-        await Property.update({ likedBy }, { where: { propertyId } });
+          if (likedBy.includes(userPrincipal)) {
+            const index = likedBy.indexOf(userPrincipal);
+            likedBy.splice(index, 1); // remove user from likedBy array if already liked
+          } else {
+            likedBy.push(userPrincipal); // add user to likedBy array if not liked
+          }
 
-        return res.status(200).send({ message: "Likes updated successfully" });
+          await Property.update({ likedBy }, { where: { propertyId } });
+
+          const prop = await Property.findOne({ where: { propertyId } });
+
+          return res.status(200).send({
+            message: "Likes updated successfully",
+            likes: prop.likedBy.length,
+          });
+        }
+      } else {
+        return res
+          .status(400)
+          .json({ status: false, message: "Cannot proceed without data" });
       }
     } catch (error) {
       console.error(error);
@@ -492,9 +497,13 @@ module.exports = {
 
   async getPropertyReelData(req, res) {
     try {
-      const userLatitude = req.header.latitude;
-      const userLongitude = req.header.longitude;
-      let radius = req.header.radius;
+      // const userLatitude = req.header.latitude;
+      // const userLongitude = req.header.longitude;
+      // let radius = req.header.radius;
+
+      let { userLatitude, userLongitude, radius } = req.query;
+
+      console.log(userLatitude, userLongitude, radius);
 
       if (_.isEmpty(userLatitude) || _.isEmpty(userLongitude)) {
         return res
@@ -550,16 +559,4 @@ module.exports = {
         .json({ status: false, error: errorMessages.internalServerError });
     }
   },
-
-  // property video stream
-
-  // async getPropertyVideoStream(req, res) {
-
-  // },
-
-
-
-
-
-
 };

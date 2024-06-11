@@ -40,7 +40,7 @@ const Property = sequelize.define("Property", {
     defaultValue: 1,
   },
   rooms: {
-    type: DataTypes.ARRAY(DataTypes.JSON),
+    type: DataTypes.ARRAY(DataTypes.JSONB),
     defaultValue: [],
   },
   location: {
