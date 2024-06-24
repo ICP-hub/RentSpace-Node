@@ -27,6 +27,7 @@ app.use("/api/v1", routes.userRoutes);
 app.use("/api/v1", routes.chatRoute);
 app.use("/api/v1", routes.hotelRoutes);
 app.use("/api/v1", routes.rateHawkRoutes);
+app.use("/api/v1", routes.propertyRoutes);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the homepage of RentSpace Node Server");
@@ -36,6 +37,13 @@ module.exports = app;
 const server = require("./socket/index");
 
 server.listen(PORT, async () => {
-  sequelize.sync();
+  try {
+    await sequelize.authenticate();
+    console.log('Connection has been established successfully.');
+    await sequelize.sync({ force: false }); // Ensure force is set correctly
+    console.log("Database & tables created!");
+  } catch (err) {
+    console.error("Unable to connect to the database:", err);
+  }
   console.log(`Server is running on port http://localhost:${PORT}`);
 });
