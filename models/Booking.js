@@ -4,12 +4,17 @@ const { emit } = require("nodemon");
 
 const Bookings = sequelize.define("Booking", {
 
-    bookingID : {
-        type: DataTypes.STRING,
-        primaryKey: true,
-    },
+    // bookingID : {
+    //     type: DataTypes.STRING,
+    //     primaryKey: true,
+    // },
     
     userId : {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+
+    propertyID : {
         type: DataTypes.STRING,
         allowNull: false,
     },
@@ -59,7 +64,7 @@ const Bookings = sequelize.define("Booking", {
         allowNull: false,
     },
 
-    phoneNumber : {
+    phone : {
         type: DataTypes.STRING,
         allowNull: false,
     },

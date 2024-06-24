@@ -1,8 +1,9 @@
-const { hotel, createActor } = require("../motoko/hotel");
+const { hotel, createActor } = require("../motoko/Hotel");
 const errorMessages = require("../config/errorMessages.json");
 
 module.exports = {
   createHotelActor(req, res, next) {
+    console.log("Create Actor")
     try {
       const agent = req.agent;
       let hotelCanister = createActor(process.env.HOTEL_CANISTER_ID, {

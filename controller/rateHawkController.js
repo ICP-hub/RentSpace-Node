@@ -3,11 +3,30 @@ const { default: axios } = require("axios");
 const { exec } = require("child_process");
 const path = require("path");
 const {Booking} = require('../models/Booking');
+const { hotel } = require("../motoko/hotel");
+const { property } = require("underscore");
 
 const username = process.env.RATEHAWK_USERNAME; // rate hawk api's for hotel
 const password = process.env.RATEHAWK_PASSWORD;
 
 // rate hawk api's for hotel
+
+const databaseData  = {
+  bookingId: "",
+  userId: "",
+  propertyID: "",
+  propertyName: "",
+  propertyLocation: "",
+  checkInDate: "",
+  checkOutDate: "",
+  bookingDate: "",
+  guestDetails: [],
+  bookingStatus: "",
+  paymentStatus: "",
+  email: "",
+  phone: "",
+
+}
 
 // function to generate UUID
 
@@ -223,7 +242,14 @@ module.exports = {
       ],
     };
 
-    console.log(hotelId);
+    // set data to databaseData
+
+    databaseData.propertyID = hotelId;
+    databaseData.checkInDate = checkInDate;
+    databaseData.checkOutDate = checkOutDate;
+    databaseData.guestDetails = postData.guests;
+
+    console.log(databaseData);
 
     try {
       const response = await axios.post(RateHawkUrls.hotelBookUrl, postData, {
@@ -299,6 +325,8 @@ module.exports = {
   // order booking form function
   async orderBookingForm(req, res) {
     const { book_hash, language, user_ip } = req.body;
+
+    console.log("Database Data:", databaseData);
 
     const partner_order_id = generateUUID();
 

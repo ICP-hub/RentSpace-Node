@@ -12,11 +12,31 @@ const {
   getPropertyReelData,
 } = require("../controller/propertyController");
 
-route.post("/property/register", createProperty);
+const { verifyDelegation } = require("../middleware/authICPDelegation");
+const { createHotelActor } = require("../middleware/createHotelActor");
+const { multipleUpload } = require("../middleware/multer");
+
+route.post(
+  "/property/register",
+  // verifyDelegation,
+  // createHotelActor,
+  // multipleUpload,
+  createProperty
+);
 route.get("/property/filters", getPropertyFilters);
 route.get("/property/all", getAllProperties);
-route.delete("/property/delete", deleteProperty);
-route.put("/property/update", updateProperty);
+route.delete(
+  "/property/delete",
+  verifyDelegation,
+  createHotelActor,
+  deleteProperty
+);
+route.put(
+  "/property/update",
+  verifyDelegation,
+  createHotelActor,
+  updateProperty
+);
 route.put("/property/updateAvailability", updatePropertyAvailability);
 route.get("/property/likes", getLikesOnProperty);
 route.put("/property/updateLikes", updateLikesOnProperty);

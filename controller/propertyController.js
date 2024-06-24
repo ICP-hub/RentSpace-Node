@@ -6,13 +6,13 @@ const { Op } = require("sequelize");
 const { isEmpty } = require("underscore");
 const crypto = require("crypto");
 
-const { searchHotel,searchRatehawkHotels } = require("./rateHawkController");
+const { searchHotel, searchRatehawkHotels } = require("./rateHawkController");
 
 module.exports = {
   async createProperty(req, res) {
     try {
       const principal = req.headers.principal; // change to req.principal for app
-      // const principal = req.principal; // change to req.principal for app
+      // const principal = req.principal; // change to req.headers.principal for postman
 
       const {
         propertyName,
@@ -32,16 +32,16 @@ module.exports = {
         phantomWalletID,
       } = req.body;
 
-      // console.log("Rooms => ",req.body.rooms);
+      console.log("Rooms => ",req.body);
 
-      const hashTxt = principal + String(latitude) + String(longitude);
-      console.log(hashTxt);
+      // const hashTxt = principal + String(latitude) + String(longitude);
+      // console.log(hashTxt);
 
-      const hash = crypto
-        .createHash("sha256")
-        .update(hashTxt)
-        .digest("base64url");
-      console.log(hash);
+      // const hash = crypto
+      //   .createHash("sha256")
+      //   .update(hashTxt)
+      //   .digest("base64url");
+      // console.log(hash);
 
       // console.log("req.files", req.body);
 
@@ -65,66 +65,87 @@ module.exports = {
           .json({ status: false, error: errorMessages.dataTooLarge });
       }
 
-      const propertyIDCheck = await Property.findOne({
-        where: { propertyId: hash },
-      });
+      const currentDate = new Date();
+      const day = currentDate.getDate();
+      const month = currentDate.getMonth() + 1;
+      const year = currentDate.getFullYear();
+      const oneMonthAfterDate = new Date(`${month + 1}/${day}/${year}`);
 
-      if (propertyIDCheck) {
-        return res
-          .status(400)
-          .json({ status: false, message: "Property already exists" });
-      }
+      // motoko integration
+      const hotelData = {
+        hotelTitle: propertyName,
+        hotelDes: propertyDescription,
+        hotelImage: imageList[0],
+        hotelLocation: location,
+        hotelAvailableFrom: currentDate,
+        hotelAvailableTill: oneMonthAfterDate,
+      };
 
-      if (!propertyIDCheck) {
-        const currentDate = new Date();
-        const day = currentDate.getDate();
-        const month = currentDate.getMonth() + 1;
-        const year = currentDate.getFullYear();
-        const oneMonthAfterDate = new Date(`${month + 1}/${day}/${year}`);
 
-        // console.log("date : ", currentDate);
-        // console.log("oneMonthAfter : ", oneMonthAfterDate);
+      const roomData = {
+        roomType: rooms[0].roomType,
+        roomPrice: rooms[0].roomPrice,
+      };
 
-        const postData = {
-          propertyId: hash,
-          propertyName,
-          propertyDescription,
-          userPrincipal: principal,
-          price,
-          priceCurrency: priceCurrency ? priceCurrency : "USDT",
-          imageList:
-            imageList.length > 0
-              ? imageList
-              : [
-                  "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelImage%2FFreeVector-Seaside-Hotel-Vector.jpg?alt=media&token=ba2925c4-a339-4789-b1c8-eefff2bba27f",
-                ],
-          videoList:
-            videoList.length > 0
-              ? videoList
-              : [
-                  "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelVideo%2FWhite%20Brown%20Modern%20Minimalist%20Real%20Estate%20Open%20House%20Video.mp4?alt=media&token=2ea7cc7c-0790-4f85-bfc8-4745662f4d8f",
-                ],
-          maxOccupancy,
-          rooms,
-          location,
-          latitude,
-          longitude,
-          likedBy: [],
-          amenities,
-          propertyType,
-          paymentMethods,
-          phantomWalletID,
-          availableFrom: currentDate,
-          availableTill: oneMonthAfterDate,
-          createdAt: currentDate,
-          updatedAt: currentDate,
-        };
+      const propertyId = await req.hotelCanister.createHotel(hotelData, roomData);
 
-        const property = await Property.create(postData);
-        return res
-          .status(201)
-          .send({ property, message: "Property created successfully" });
-      }
+      // ----------------------------------------
+
+      // const propertyIDCheck = await Property.findOne({
+      //   where: { propertyId: hash },
+      // });
+
+      // if (propertyIDCheck) {
+      //   return res
+      //     .status(400)
+      //     .json({ status: false, message: "Property already exists" });
+      // }
+
+      // if (!propertyIDCheck) {
+      // console.log("date : ", currentDate);
+      // console.log("oneMonthAfter : ", oneMonthAfterDate);
+
+      const postData = {
+        // propertyId: propertyId,
+        propertyId: hash,
+        propertyName,
+        propertyDescription,
+        userPrincipal: principal,
+        price,
+        priceCurrency: priceCurrency ? priceCurrency : "USDT",
+        imageList:
+          imageList.length > 0
+            ? imageList
+            : [
+                "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelImage%2FFreeVector-Seaside-Hotel-Vector.jpg?alt=media&token=ba2925c4-a339-4789-b1c8-eefff2bba27f",
+              ],
+        videoList:
+          videoList.length > 0
+            ? videoList
+            : [
+                "https://firebasestorage.googleapis.com/v0/b/rentspace-e58b7.appspot.com/o/hotelVideo%2FWhite%20Brown%20Modern%20Minimalist%20Real%20Estate%20Open%20House%20Video.mp4?alt=media&token=2ea7cc7c-0790-4f85-bfc8-4745662f4d8f",
+              ],
+        maxOccupancy,
+        rooms,
+        location,
+        latitude,
+        longitude,
+        likedBy: [],
+        amenities,
+        propertyType,
+        paymentMethods,
+        phantomWalletID,
+        availableFrom: currentDate,
+        availableTill: oneMonthAfterDate,
+        createdAt: currentDate,
+        updatedAt: currentDate,
+      };
+
+      const property = await Property.create(postData);
+      return res
+        .status(201)
+        .send({ property, message: "Property created successfully" });
+      // }
     } catch (error) {
       console.log("Error creating property");
       console.log(error);
@@ -232,23 +253,21 @@ module.exports = {
       var AllApiHotels = [];
       var AllApiHotelsIDs = [];
 
-      const newRHHotels =  await searchRatehawkHotels({
+      const newRHHotels = await searchRatehawkHotels({
         latitude,
         longitude,
-        totalHotels: 5, // hardcoded for now to get 5 hotels only from Dump 
+        totalHotels: 5, // hardcoded for now to get 5 hotels only from Dump
       });
 
       // console.log("New Hotels Length : ", typeof(newRHHotels));
 
-      if(newRHHotels?.final_hotels?.length !== 0){
+      if (newRHHotels?.final_hotels?.length !== 0) {
         AllApiHotels = newRHHotels.final_hotels;
         AllApiHotelsIDs = newRHHotels.final_hotels_Id;
       }
 
-
       // searching hotels from RateHawk API baswd on location
 
-      
       // const searchString = name ? name : "hotel" + " " + location;
 
       // console.log("Searched Hotels from RateHawk API : " + searchString);
@@ -268,7 +287,12 @@ module.exports = {
 
       if (filteredPropertiesDB.length == 0 && AllApiHotels.length == 0) {
         console.log("No hotels found in DB and API");
-        return res.json({ status: false, hotels: [], externalHotels: [], externalHotelsIDs: []});
+        return res.json({
+          status: false,
+          hotels: [],
+          externalHotels: [],
+          externalHotelsIDs: [],
+        });
       }
       if (filteredPropertiesDB.length == 0 && AllApiHotels.length != 0) {
         console.log("Hotel found in API only");
@@ -319,9 +343,11 @@ module.exports = {
     try {
       const propertyId = req.query.propertyId;
       console.log(propertyId);
+      console.log(req.hotelCanister);
 
       const property = await Property.findOne({ where: { propertyId } });
 
+      await req.hotelCanister.deleteHotel(propertyId);
       await property.destroy();
       console.log("Hotel deleted successfully");
       res.json({ status: true, message: successMessages.hotelDeleted });
@@ -400,6 +426,48 @@ module.exports = {
           .json({ status: false, message: errorMessages.hotelNotFound });
       }
       if (property) {
+        // motoko integration
+        const hotelData = {
+          hotelId: propertyId,
+          hotelTitle: updateFields.propertyName
+            ? updateFields.propertyName
+            : property.propertyName,
+          hotelDes: updateFields.propertyDescription
+            ? updateFields.propertyDescription
+            : property.propertyDescription,
+          hotelImage:
+            updateFields.imageList?.length > 0
+              ? updateFields.imageList[0]
+              : property.imageList[0],
+          hotelLocation: updateFields.location
+            ? updateFields.location
+            : property.location,
+          hotelAvailableFrom: property.availableFrom,
+          hotelAvailableTill: property.availableTill,
+          createdAt: property.createdAt,
+        };
+
+        // iterate over rooms and update motoko canister {roomType, roomPrice}
+        // const rooms = property.rooms;
+        // const roomData = [];
+
+        // rooms.forEach(async (room) => {
+        //   const roomItem = {
+        //     roomType: room.roomType,
+        //     roomPrice: room.roomPrice,
+        //   };
+
+        //   roomData.push(roomItem);
+        // });
+
+        const roomData = {
+          roomType: property.rooms[0].roomType,
+          roomPrice: property.rooms[0].roomPrice,
+        }
+
+        await req.hotelCanister.updateHotel(hotelData, roomData);
+
+
         await Property.update(finalData, { where: { propertyId } });
 
         console.log("Property updated successfully");
@@ -520,7 +588,7 @@ module.exports = {
     try {
       // const userLatitude = req.header.latitude;
       // const userLongitude = req.header.longitude;
-      // let radius = req.header.radius; 
+      // let radius = req.header.radius;
 
       let { userLatitude, userLongitude, radius } = req.query;
 

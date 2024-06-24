@@ -7,10 +7,10 @@ const {
 const errorMessages = require("../config/errorMessages.json");
 const { toHex, fromHex, HttpAgent } = require("@dfinity/agent");
 // const { backend, createActor } = require("../motoko/backend");
-const {hotel,createActor}=require("../motoko/hotel")
+const {Hotel,createActor}=require("../motoko/Hotel")
 const crypto = require("crypto");
 
-let backendCanister = hotel;
+let backendCanister = Hotel;
 
 module.exports = {
   async delegationValidation(pubKey, priKey, delegation) {
