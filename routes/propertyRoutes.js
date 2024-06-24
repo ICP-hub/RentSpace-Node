@@ -9,8 +9,7 @@ const {
   updatePropertyAvailability,
   getLikesOnProperty,
   updateLikesOnProperty,
-  getPropertyReelData
-
+  getPropertyReelData,
 } = require("../controller/propertyController");
 
 route.post("/property/register", createProperty);

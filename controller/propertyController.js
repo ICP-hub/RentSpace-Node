@@ -6,7 +6,7 @@ const { Op } = require("sequelize");
 const { isEmpty } = require("underscore");
 const crypto = require("crypto");
 
-const { searchHotel } = require("./rateHawkController");
+const { searchHotel,searchRatehawkHotels } = require("./rateHawkController");
 
 module.exports = {
   async createProperty(req, res) {
@@ -149,7 +149,7 @@ module.exports = {
         longitude,
       } = req.query;
 
-      // console.log("req.query", req.query);
+      console.log("req.query", req.query);
 
       const conditions = {};
 
@@ -217,7 +217,7 @@ module.exports = {
       // Calculate offset based on pagination parameters
       const offset = (page - 1) * pageSize;
 
-      console.log("conditions : ", conditions);
+      // console.log("conditions : ", conditions);
 
       const filteredPropertiesDB = await Property.findAll({
         where: conditions,
@@ -227,30 +227,48 @@ module.exports = {
 
       // ----------------- RateHawk API -----------------
 
-      // searching hotels from RateHawk API baswd on location
+      // searching hotels from RateHawk API based on coordinates
 
       var AllApiHotels = [];
+      var AllApiHotelsIDs = [];
 
-      const searchString = name ? name : "hotel" + " " + location;
-
-      console.log("Searched Hotels from RateHawk API : " + searchString);
-
-      const apiHotels = await searchHotel({
-        query: searchString,
-        language: "en",
+      const newRHHotels =  await searchRatehawkHotels({
+        latitude,
+        longitude,
+        totalHotels: 5, // hardcoded for now to get 5 hotels only from Dump 
       });
 
-      if (!isEmpty(apiHotels)) {
-        AllApiHotels = apiHotels;
-      } else {
-        AllApiHotels = [];
+      // console.log("New Hotels Length : ", typeof(newRHHotels));
+
+      if(newRHHotels?.final_hotels?.length !== 0){
+        AllApiHotels = newRHHotels.final_hotels;
+        AllApiHotelsIDs = newRHHotels.final_hotels_Id;
       }
+
+
+      // searching hotels from RateHawk API baswd on location
+
+      
+      // const searchString = name ? name : "hotel" + " " + location;
+
+      // console.log("Searched Hotels from RateHawk API : " + searchString);
+
+      // const apiHotels = await searchHotel({
+      //   query: searchString,
+      //   language: "en",
+      // });
+
+      // if (!isEmpty(apiHotels)) {
+      //   AllApiHotels = apiHotels;
+      // } else {
+      //   AllApiHotels = [];
+      // }
 
       // returning filtered hotels from RateHawk API and DB
 
       if (filteredPropertiesDB.length == 0 && AllApiHotels.length == 0) {
         console.log("No hotels found in DB and API");
-        return res.json({ status: false, hotels: [], externalHotels: [] });
+        return res.json({ status: false, hotels: [], externalHotels: [], externalHotelsIDs: []});
       }
       if (filteredPropertiesDB.length == 0 && AllApiHotels.length != 0) {
         console.log("Hotel found in API only");
@@ -258,6 +276,7 @@ module.exports = {
           status: true,
           hotels: [],
           externalHotels: AllApiHotels,
+          externalHotelsIDs: AllApiHotelsIDs,
         });
       }
       if (filteredPropertiesDB.length != 0 && AllApiHotels.length == 0) {
@@ -266,6 +285,7 @@ module.exports = {
           status: true,
           hotels: filteredPropertiesDB,
           externalHotels: [],
+          externalHotelsIDs: [],
         });
       }
       if (filteredPropertiesDB.length != 0 && AllApiHotels.length != 0) {
@@ -274,6 +294,7 @@ module.exports = {
           status: true,
           hotels: filteredPropertiesDB,
           externalHotels: AllApiHotels,
+          externalHotelsIDs: AllApiHotelsIDs,
         });
       }
       // return res.status(200).send({ properties: filteredPropertiesDB });
@@ -499,7 +520,7 @@ module.exports = {
     try {
       // const userLatitude = req.header.latitude;
       // const userLongitude = req.header.longitude;
-      // let radius = req.header.radius;
+      // let radius = req.header.radius; 
 
       let { userLatitude, userLongitude, radius } = req.query;
 

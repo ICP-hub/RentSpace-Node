@@ -1,3 +1,5 @@
+// main index .js
+
 require("dotenv").config();
 const fetch = require("node-fetch-commonjs");
 const crypto = require("crypto");
@@ -8,6 +10,9 @@ const cors = require("cors");
 const sequelize = require("./database");
 const routes = require("./routes");
 _ = require("underscore");
+const fs = require("fs");
+const path = require("path");
+const https = require("https");
 
 const app = express();
 app.use(
@@ -33,17 +38,50 @@ app.get("/", (req, res) => {
   res.send("Welcome to the homepage of RentSpace Node Server");
 });
 
+// download the ratehawk hotels Dump file every 7 days
+const fileUrl = "https://partner-feedora.s3.eu-central-1.amazonaws.com/feed/partner_feed_en_v3.jsonl.zst";
+const fileName = "partner_feed_en_v3.jsonl.zst";
+const filePath = path.join(__dirname, "controller", fileName);
+
+function downloadFile(url, path) {
+  const file = fs.createWriteStream(path);
+  https
+    .get(url, (response) => {
+      response.pipe(file);
+      console.log("Downloading file...");
+      console.log(fileUrl);
+      file.on("finish", () => {
+        file.close(() => {
+          console.log(`File downloaded and saved to ${filePath}`);
+        });
+      });
+    })
+    .on("error", (error) => {
+      fs.unlink(path);
+      console.error(`Error downloading file: ${error.message}`);
+    });
+}
+
+function inititate_download(){
+  setInterval(() => {
+    downloadFile(fileUrl, filePath);
+  }, 7 * 24 * 60 * 60 * 1000); // 7 days
+
+  console.log("Scheduled file download job to run every 7 Days.");
+}
+
 module.exports = app;
 const server = require("./socket/index");
 
 server.listen(PORT, async () => {
   try {
     await sequelize.authenticate();
-    console.log('Connection has been established successfully.');
+    console.log("Connection has been established successfully.");
     await sequelize.sync({ force: false }); // Ensure force is set correctly
     console.log("Database & tables created!");
   } catch (err) {
     console.error("Unable to connect to the database:", err);
   }
+  inititate_download();
   console.log(`Server is running on port http://localhost:${PORT}`);
 });

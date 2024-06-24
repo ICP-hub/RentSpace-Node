@@ -1,5 +1,8 @@
 const RateHawkUrls = require("../config/rateHawkUrls");
 const { default: axios } = require("axios");
+const { exec } = require("child_process");
+const path = require("path");
+const {Booking} = require('../models/Booking');
 
 const username = process.env.RATEHAWK_USERNAME; // rate hawk api's for hotel
 const password = process.env.RATEHAWK_PASSWORD;
@@ -16,124 +19,194 @@ function generateUUID() {
   });
 }
 
-module.exports = {
-  // function to search hotel by city or hotel name
-  async searchHotel({ query, language }) {
-    const postData = {
-      query: query,
-      language: language,
-    };
+function fetchHotelsFromPythonScript(latitude, longitude, totalHotels) {
+  return new Promise((resolve, reject) => {
+    // path to python script in same dir
+    const pythonScriptPath = path.join(__dirname, "../controller/main.py");
 
-    try {
-      const response = await axios.post(RateHawkUrls.searchUrl, postData, {
-        auth: {
-          username: username,
-          password: password,
-        },
-      });
-      const hotels = response.data?.data?.hotels;
-      const finalHotelList = [];
-      const hotelIdList = [];
+    const command = `python "${pythonScriptPath}" ${latitude} ${longitude} ${totalHotels}`;
 
-      hotels.forEach(async (hotel) => {
-        hotelIdList.push(hotel.id);
-      });
+    console.log("Command:", command);
 
-      console.log("Query :", query);
-      console.log("Hotel Id List:", hotelIdList);
-
-      // traverse each item in hotels array and add hotel id in hotelIdList
-      for (let i = 0; i < hotels.length; i++) {
-        // console.log("Hotel Id:", hotels[i].id);
-
-        const date = new Date();
-        var day = date.getDate();
-        var month = date.getMonth() + 1;
-        const year = date.getFullYear();
-
-        var checkOutDay = day + 5;
-
-        if(day < 10){
-          day = `0${day}`;
-        }
-        if(month < 10){
-          month = `0${month}`;
-        }
-        if(checkOutDay < 10){
-          checkOutDay = `0${checkOutDay}`;
-        }
-
-      
-        var checkInDate = new Date(`${year}-${month}-${day}`).toISOString().slice(0, 10);
-        var checkOutDate = `${year}-${month}-${checkOutDay}`;
-
-        // console.log("Check In Date:", checkInDate);
-        // console.log("Check Out Date:", checkOutDate);
-
-        const postData = {
-          id: hotels[i].id,
-          checkin: checkInDate,
-          checkout: checkOutDate,
-          language: "en",
-          guests: [
-            {
-              adults: 2,
-              children: [],
-            },
-          ],
-        };
-
-        try {
-          const hotelResponse = await axios.post(
-            RateHawkUrls.hotelBookUrl,
-            postData,
-            {
-              auth: {
-                username: username,
-                password: password,
-              },
-            }
-          );
-          if (hotelResponse?.data?.data?.hotels[0]?.rates[0]?.book_hash) {
-            finalHotelList.push(hotels[i]);
-          }
-        } catch (error) {
-          console.error("Error:", error.message);
-          console.log("Error in hash check response");
-        }
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error executing Python script: ${error}`);
+        reject(error);
+        return;
       }
+      if (stderr) {
+        console.error(`Python script stderr: ${stderr}`);
+      }
+      try {
+        console.log("Stdout = ", stdout);
 
-      console.log("Final Hotel List Outer :", finalHotelList);
+        const hotels = JSON.parse(stdout);
+        
+        if (hotels.length === 0) {
+          console.log("No hotels found");
+          reject("No hotels found");
+          return;
+        }
+        resolve(hotels);
+      } catch (parseError) {
+        console.error(`Error parsing JSON: ${parseError}`);
+        reject(parseError);
+      }
+    });
+  });
+}
 
-      return finalHotelList;
-    } catch (error) {
-      console.error("Error:", error.message);
-      return "Facing issue in fetching hotels. Please try again later.";
-    }
-  }, 
+module.exports = {
+  // new function to search hotel by coordinates and total number of hotels
 
-  async getHotelInfo(req, res) {
-    const { hotelId, language } = req.body;
+  // async searchRatehawkHotels(req, res) {
+  //   try {
+  //     const { latitude, longitude, totalHotels } = req.body;
 
-    const postData = {
-      id: hotelId,
-      language: language,
-    };
+  //     const postData = {
+  //       latitude: latitude,
+  //       longitude: longitude,
+  //       totalHotels: totalHotels,
+  //     };
 
-    try {
-      const response = await axios.post(RateHawkUrls.hotelInfoUrl, postData, {
-        auth: {
-          username: username,
-          password: password,
-        },
-      });
-      console.log("Response sent");
-      res.json({ status: true, data: response.data });
-    } catch (error) {
-      console.error("Error:", error.message);
-    }
+  //     console.log("API CAlled");
+  //     res.json({ status: true, data: postData });
+  //   } catch (error) {
+  //     console.error("Error:", error.message);
+  //     res.json({ status: false, msg: error.message });
+  //   }
+  // },
+
+  async searchRatehawkHotels({ latitude, longitude, totalHotels }) {
+    const Hotels = await fetchHotelsFromPythonScript(
+      latitude,
+      longitude,
+      totalHotels
+    );
+    // console.log("Hotels fetched:", Hotels);
+    return Hotels;
   },
 
+  // function to search hotel by city or hotel name (used earlier)
+  // async searchHotel({ query, language }) {
+  //   const postData = {
+  //     query: query,
+  //     language: language,
+  //   };
+
+  //   try {
+  //     const response = await axios.post(RateHawkUrls.searchUrl, postData, {
+  //       auth: {
+  //         username: username,
+  //         password: password,
+  //       },
+  //     });
+  //     const hotels = response.data?.data?.hotels;
+  //     const finalHotelList = [];
+  //     const hotelIdList = [];
+
+  //     hotels.forEach(async (hotel) => {
+  //       hotelIdList.push(hotel.id);
+  //     });
+
+  //     console.log("Query :", query);
+  //     console.log("Hotel Id List:", hotelIdList);
+
+  //     // traverse each item in hotels array and add hotel id in hotelIdList
+  //     for (let i = 0; i < hotels.length; i++) {
+  //       // console.log("Hotel Id:", hotels[i].id);
+
+  //       const date = new Date();
+  //       var day = date.getDate();
+  //       var month = date.getMonth() + 1;
+  //       const year = date.getFullYear();
+
+  //       var checkOutDay = day + 5;
+
+  //       if (day < 10) {
+  //         day = `0${day}`;
+  //       }
+  //       if (month < 10) {
+  //         month = `0${month}`;
+  //       }
+  //       if (checkOutDay < 10) {
+  //         checkOutDay = `0${checkOutDay}`;
+  //       }
+
+  //       var checkInDate = new Date(`${year}-${month}-${day}`)
+  //         .toISOString()
+  //         .slice(0, 10);
+  //       var checkOutDate = `${year}-${month}-${checkOutDay}`;
+
+  //       // console.log("Check In Date:", checkInDate);
+  //       // console.log("Check Out Date:", checkOutDate);
+
+  //       const postData = {
+  //         id: hotels[i].id,
+  //         checkin: checkInDate,
+  //         checkout: checkOutDate,
+  //         language: "en",
+  //         guests: [
+  //           {
+  //             adults: 2,
+  //             children: [],
+  //           },
+  //         ],
+  //       };
+
+  //       try {
+  //         const hotelResponse = await axios.post(
+  //           RateHawkUrls.hotelBookUrl,
+  //           postData,
+  //           {
+  //             auth: {
+  //               username: username,
+  //               password: password,
+  //             },
+  //           }
+  //         );
+  //         if (hotelResponse?.data?.data?.hotels[0]?.rates[0]?.book_hash) {
+  //           finalHotelList.push(hotels[i]);
+  //         }
+  //       } catch (error) {
+  //         console.error("Error:", error.message);
+  //         console.log("Error in hash check response");
+  //       }
+  //     }
+
+  //     console.log("Final Hotel List Outer :", finalHotelList);
+
+  //     return finalHotelList;
+  //   } catch (error) {
+  //     console.error("Error:", error.message);
+  //     return "Facing issue in fetching hotels. Please try again later.";
+  //   }
+  // },
+
+  // (not in use anymore  - used earlier)
+  // async getHotelInfo(req, res) {
+  //   const { hotelId, language } = req.body;
+
+  //   const postData = {
+  //     id: hotelId,
+  //     language: language,
+  //   };
+
+  //   try {
+  //     const response = await axios.post(RateHawkUrls.hotelInfoUrl, postData, {
+  //       auth: {
+  //         username: username,
+  //         password: password,
+  //       },
+  //     });
+  //     console.log("Response sent");
+  //     res.json({ status: true, data: response.data });
+  //   } catch (error) {
+  //     console.error("Error:", error.message);
+  //   }
+  // },
+
+  // function to get all room rates for a hotel
   async bookHotel(req, res) {
     const { hotelId, checkInDate, checkOutDate, adults, children } = req.body;
 

@@ -296,10 +296,10 @@ module.exports = {
         longitude,
       } = req.query;
 
-      // console.log("Location : ", location);
-      // console.log("Latitude : ", latitude);
-      // console.log("Longitude : ", longitude);
-      // console.log(req.query);
+      console.log("Location : ", location);
+      console.log("Latitude : ", latitude);
+      console.log("Longitude : ", longitude);
+      console.log(req.query);
 
       // Define conditions for filtering
       const conditions = {};
