@@ -1,26 +1,54 @@
-type _anon_class_10_1 = 
+type _anon_class_19_1 = 
  service {
-   addOwner: (text) -> (text);
-   checkHotelExist: (text) -> (bool) query;
-   createHotel: (HotelInfo) -> (HotelId);
-   deleteHotel: (HotelId) -> (text);
-   getAllAdmin: () -> (vec AdminId) query;
-   getHotel: (HotelId) -> (opt HotelInfo) query;
-   getHotelAvailabilty: (HotelId) ->
-    (opt record {
-           hotelAvailableFrom: text;
-           hotelAvailableTill: text;
-         }) query;
-   getHotelFrequencyByYear: (text) -> (opt AnnualData) query;
-   getHotelId: () -> (vec HotelId) query;
-   getNoOfPages: (nat) -> (nat) query;
-   getTime: () -> (int) query;
-   scanHotel: (nat, nat) -> (vec record {
-                                   HotelId;
-                                   HotelInfo;
-                                 }) query;
-   updateHotel: (HotelId, HotelInfo) -> (opt HotelInfo);
-   whoami: () -> (text) query;
+   checkHotelExist: (HotelId) -> (bool) query;
+   createHotel: (HotelInfo, RoomType) -> (Result);
+   deleteHotel: (HotelId) -> (Result);
+   getAllHotels: (nat, nat) -> (Result_5);
+   getHotel: (HotelId) -> (Result_4) query;
+   getHotelRegisterFrequencyData: (Year) -> (Result_3) query;
+   getNumberofHotels: () -> (Result_2);
+   getRoom: (HotelId) -> (Result_1) query;
+   updateHotel: (HotelInfo, RoomType) -> (Result);
+   whoami: () -> (text);
+ };
+type Year = text;
+type RoomType = 
+ record {
+   roomPrice: nat;
+   roomType: text;
+ };
+type Result_5 = 
+ variant {
+   err: text;
+   ok: vec record {
+             HotelId;
+             HotelInfo;
+           };
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: HotelInfo;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: AnnualData;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: RoomType;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: text;
  };
 type HotelInfo = 
  record {
@@ -28,11 +56,10 @@ type HotelInfo =
    hotelAvailableFrom: text;
    hotelAvailableTill: text;
    hotelDes: text;
+   hotelId: text;
    hotelImage: text;
    hotelLocation: text;
-   hotelPrice: text;
    hotelTitle: text;
-   updatedAt: opt text;
  };
 type HotelId = text;
 type AnnualData = 
@@ -50,5 +77,4 @@ type AnnualData =
    oct: nat;
    sep: nat;
  };
-type AdminId = text;
-service : () -> _anon_class_10_1
+service : () -> _anon_class_19_1

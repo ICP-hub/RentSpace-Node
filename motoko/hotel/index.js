@@ -1,8 +1,10 @@
+// import { Actor, HttpAgent } from "@dfinity/agent";
 const { Actor, HttpAgent } = require("@dfinity/agent");
 
-// Imports and re-exports candid interface
-const { idlFactory } = require("./hotel.did.js");
-const { Principal } = require("@dfinity/principal");
+// Imports and re-s candid interface
+// import { idlFactory } from "./Hotel.did.js";
+//  { idlFactory } from "./Hotel.did.js";
+const {idlFactory} = require("./Hotel.did.js");
 
 /* CANISTER_ID is replaced by webpack based on node environment
  * Note: canister environment variable will be standardized as
@@ -12,7 +14,7 @@ const { Principal } = require("@dfinity/principal");
 const canisterId = process.env.HOTEL_CANISTER_ID;
 
 const createActor = (canisterId, options = {}) => {
-  const agent = options.agent || new HttpAgent({ ...options.agentOptions });
+  const agent = options.agent || new HttpAgent({ ...options.agentOptions,host: process.env.ICP_HOST});
 
   if (options.agent && options.agentOptions) {
     console.warn(
@@ -38,20 +40,11 @@ const createActor = (canisterId, options = {}) => {
   });
 };
 
-const hotel = createActor(canisterId, {
-  agentOptions: {
-    fetchOptions: {
-      reactNative: {
-        __nativeResponseType: "base64",
-      },
-    },
-    callOptions: {
-      reactNative: {
-        textStreaming: true,
-      },
-    },
-    blsVerify: () => true,
-    host: process.env.ICP_HOST,
-  },
-});
-module.exports = { hotel, canisterId, idlFactory, createActor };
+const Hotel = canisterId ? createActor(canisterId) : undefined;
+
+module.exports = {
+  Hotel,
+  createActor,
+  idlFactory,
+  canisterId,
+};
