@@ -73,12 +73,14 @@ module.exports = {
 
       // motoko integration
       const hotelData = {
+        hotelId : "",
         hotelTitle: propertyName,
         hotelDes: propertyDescription,
         hotelImage: imageList[0],
         hotelLocation: location,
-        hotelAvailableFrom: currentDate,
-        hotelAvailableTill: oneMonthAfterDate,
+        hotelAvailableFrom: currentDate.toDateString(),
+        hotelAvailableTill: oneMonthAfterDate.toDateString(),
+        createdAt: currentDate.toDateString(),
       };
 
 
@@ -105,9 +107,15 @@ module.exports = {
       // console.log("date : ", currentDate);
       // console.log("oneMonthAfter : ", oneMonthAfterDate);
 
+
+      let newPropertyID = propertyId?.ok?.split(" ");
+
+      console.log("Property ID : ", propertyId);
+      console.log("newPropertyID : ", newPropertyID);
+
       const postData = {
-        // propertyId: propertyId,
-        propertyId: hash,
+        propertyId: newPropertyID[newPropertyID.length - 1],
+        // propertyId: hash,
         propertyName,
         propertyDescription,
         userPrincipal: principal,
@@ -341,7 +349,7 @@ module.exports = {
 
   async deleteProperty(req, res) {
     try {
-      const propertyId = req.query.propertyId;
+      const propertyId = req.body.propertyId;
       console.log(propertyId);
       console.log(req.hotelCanister);
 
@@ -429,44 +437,31 @@ module.exports = {
         // motoko integration
         const hotelData = {
           hotelId: propertyId,
-          hotelTitle: updateFields.propertyName
-            ? updateFields.propertyName
+          hotelTitle: finalData.propertyName
+            ? finalData.propertyName
             : property.propertyName,
-          hotelDes: updateFields.propertyDescription
-            ? updateFields.propertyDescription
+          hotelDes: finalData.propertyDescription
+            ? finalData.propertyDescription
             : property.propertyDescription,
           hotelImage:
-            updateFields.imageList?.length > 0
-              ? updateFields.imageList[0]
+          finalData.imageList?.length > 0
+              ? finalData.imageList[0]
               : property.imageList[0],
-          hotelLocation: updateFields.location
-            ? updateFields.location
+          hotelLocation: finalData.location
+            ? finalData.location
             : property.location,
-          hotelAvailableFrom: property.availableFrom,
-          hotelAvailableTill: property.availableTill,
-          createdAt: property.createdAt,
+          hotelAvailableFrom: property.availableFrom.toDateString(),
+          hotelAvailableTill: property.availableTill.toDateString(),
+          createdAt: property.createdAt.toDateString(),
         };
 
-        // iterate over rooms and update motoko canister {roomType, roomPrice}
-        // const rooms = property.rooms;
-        // const roomData = [];
-
-        // rooms.forEach(async (room) => {
-        //   const roomItem = {
-        //     roomType: room.roomType,
-        //     roomPrice: room.roomPrice,
-        //   };
-
-        //   roomData.push(roomItem);
-        // });
-
         const roomData = {
-          roomType: property.rooms[0].roomType,
-          roomPrice: property.rooms[0].roomPrice,
+          roomType: finalData.rooms[0].roomType,
+          roomPrice: Number(finalData.rooms[0].roomPrice),
         }
 
-        await req.hotelCanister.updateHotel(hotelData, roomData);
-
+        const motokoResponse = await req.hotelCanister.updateHotel(hotelData, roomData);
+console.log(motokoResponse);
 
         await Property.update(finalData, { where: { propertyId } });
 

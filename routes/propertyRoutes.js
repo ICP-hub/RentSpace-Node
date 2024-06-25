@@ -16,10 +16,9 @@ const { verifyDelegation } = require("../middleware/authICPDelegation");
 const { createHotelActor } = require("../middleware/createHotelActor");
 const { multipleUpload } = require("../middleware/multer");
 
-route.post(
-  "/property/register",
-  // verifyDelegation,
-  // createHotelActor,
+route.post("/property/register",
+  verifyDelegation,
+  createHotelActor,
   // multipleUpload,
   createProperty
 );

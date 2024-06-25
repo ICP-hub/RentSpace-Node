@@ -10,6 +10,7 @@ module.exports = {
       let delegation = req.headers["x-delegation"]; // private key for delegation chain
 
       if (_.isEmpty(pubKey) || _.isEmpty(priKey) || _.isEmpty(delegation)) {
+        console.log("PubKey, PriKey, Delegation", pubKey, priKey, delegation)
         return res.status(401).json({ status:false, error: errorMessages.invalidHeaderData });
       }
 
