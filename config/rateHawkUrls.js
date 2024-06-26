@@ -1,4 +1,4 @@
-const { hotel } = require("../motoko/hotel");
+const { hotel } = require("../motoko/Hotel");
 
 const RateHawkUrls = {
     searchUrl: "https://api.worldota.net/api/b2b/v3/search/multicomplete/",

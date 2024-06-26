@@ -3,7 +3,7 @@ const { default: axios } = require("axios");
 const { exec } = require("child_process");
 const path = require("path");
 const {Booking} = require('../models/Booking');
-const { hotel } = require("../motoko/hotel");
+const { hotel } = require("../motoko/Hotel");
 const { property } = require("underscore");
 
 const username = process.env.RATEHAWK_USERNAME; // rate hawk api's for hotel
