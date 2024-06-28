@@ -106,6 +106,44 @@ module.exports = {
     return Hotels;
   },
 
+  // function to get hash for sample hotel
+  async getHashForSampleHotel(req, res) {
+
+    const {checkInDate, checkOutDate, adults, children } = req.body;
+
+
+    const postData = {
+      id: "test_hotel",
+      checkin: checkInDate,
+      checkout: checkOutDate,
+      language: "en",
+      guests: [
+        {
+          adults: adults,
+          children: children,
+        },
+      ],
+    };
+
+    try {
+      const response = await axios.post(RateHawkUrls.hotelBookUrl, postData, {
+        auth: {
+          username: username,
+          password: password,
+        },
+      });
+      console.log("Response sent for Rate Hawk Sample Hotel");
+      console.log(response.data);
+      res.json({ status: true, data: response.data });
+    }
+    catch (error) {
+      console.error("Error:", error.message);
+      res.json({ status: false, msg: error.message });
+    }
+
+
+  },
+
   // function to search hotel by city or hotel name (used earlier)
   // async searchHotel({ query, language }) {
   //   const postData = {
@@ -263,6 +301,32 @@ module.exports = {
       console.log(response.data);
       res.json({ status: true, data: response.data });
     } catch (error) {
+      console.error("Error:", error.message);
+    }
+  },
+
+  // fucntion for Preebook Endpoint
+  async preBook(req, res) {
+    const {hash, price_increase_percent} = req.body;
+
+    const postData = {
+      hash: hash,
+      price_increase_percent: price_increase_percent
+    };
+
+    try {
+      const response = await axios.post(RateHawkUrls.preBookUrl, postData, {
+        auth: {
+          username: username,
+          password: password,
+        },
+      });
+      console.log("Response sent for Rate Hawk Pre Book");
+      console.log(response.data);
+      res.json({ status: true, data: response.data });
+
+    }
+    catch (error) {
       console.error("Error:", error.message);
     }
   },
