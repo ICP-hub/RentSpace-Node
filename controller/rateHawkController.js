@@ -2,16 +2,17 @@ const RateHawkUrls = require("../config/rateHawkUrls");
 const { default: axios } = require("axios");
 const { exec } = require("child_process");
 const path = require("path");
-const {Booking} = require('../models/Booking');
+const { Booking } = require("../models/Booking");
 const { hotel } = require("../motoko/Hotel");
 const { property } = require("underscore");
+const { or } = require("sequelize");
 
 const username = process.env.RATEHAWK_USERNAME; // rate hawk api's for hotel
 const password = process.env.RATEHAWK_PASSWORD;
 
 // rate hawk api's for hotel
 
-const databaseData  = {
+const databaseData = {
   bookingId: "",
   userId: "",
   propertyID: "",
@@ -25,8 +26,7 @@ const databaseData  = {
   paymentStatus: "",
   email: "",
   phone: "",
-
-}
+};
 
 // function to generate UUID
 
@@ -43,35 +43,52 @@ function fetchHotelsFromPythonScript(latitude, longitude, totalHotels) {
     // path to python script in same dir
     const pythonScriptPath = path.join(__dirname, "../controller/main.py");
 
-    const command = `python "${pythonScriptPath}" ${latitude} ${longitude} ${totalHotels}`;
+    if (
+      latitude === undefined ||
+      longitude === undefined ||
+      totalHotels === undefined ||
+      latitude === "0" ||
+      longitude === "0" ||
+      totalHotels === "0"
+    ) {
+      console.error("Latitude, Longitude or Total Hotels not provided");
+      reject("Latitude, Longitude or Total Hotels not provided");
+      return;
+    } else {
+      console.log("Latitude:", latitude);
+      console.log("Longitude:", longitude);
+      console.log("Total Hotels:", totalHotels);
 
-    console.log("Command:", command);
+      const command = `python "${pythonScriptPath}" ${latitude} ${longitude} ${totalHotels}`;
 
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error executing Python script: ${error}`);
-        reject(error);
-        return;
-      }
-      if (stderr) {
-        console.error(`Python script stderr: ${stderr}`);
-      }
-      try {
-        console.log("Stdout = ", stdout);
+      console.log("Command:", command);
 
-        const hotels = JSON.parse(stdout);
-        
-        if (hotels.length === 0) {
-          console.log("No hotels found");
-          reject("No hotels found");
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error executing Python script: ${error}`);
+          reject(error);
           return;
         }
-        resolve(hotels);
-      } catch (parseError) {
-        console.error(`Error parsing JSON: ${parseError}`);
-        reject(parseError);
-      }
-    });
+        if (stderr) {
+          console.error(`Python script stderr: ${stderr}`);
+        }
+        try {
+          console.log("Stdout = ", typeof(stdout.length));
+
+          const hotels = JSON.parse(stdout);
+
+          if (hotels.length === 0) {
+            console.log("No hotels found");
+            reject("No hotels found");
+            return;
+          }
+          resolve(hotels);
+        } catch (parseError) {
+          console.error(`Error parsing JSON: ${parseError}`);
+          reject(parseError);
+        }
+      });
+    }
   });
 }
 
@@ -108,9 +125,7 @@ module.exports = {
 
   // function to get hash for sample hotel
   async getHashForSampleHotel(req, res) {
-
-    const {checkInDate, checkOutDate, adults, children } = req.body;
-
+    const { checkInDate, checkOutDate, adults, children } = req.body;
 
     const postData = {
       id: "test_hotel",
@@ -135,13 +150,10 @@ module.exports = {
       console.log("Response sent for Rate Hawk Sample Hotel");
       console.log(response.data);
       res.json({ status: true, data: response.data });
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error:", error.message);
       res.json({ status: false, msg: error.message });
     }
-
-
   },
 
   // function to search hotel by city or hotel name (used earlier)
@@ -307,11 +319,11 @@ module.exports = {
 
   // fucntion for Preebook Endpoint
   async preBook(req, res) {
-    const {hash, price_increase_percent} = req.body;
+    const { hash, price_increase_percent } = req.body;
 
     const postData = {
       hash: hash,
-      price_increase_percent: price_increase_percent
+      price_increase_percent: price_increase_percent,
     };
 
     try {
@@ -324,9 +336,7 @@ module.exports = {
       console.log("Response sent for Rate Hawk Pre Book");
       console.log(response.data);
       res.json({ status: true, data: response.data });
-
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error:", error.message);
     }
   },

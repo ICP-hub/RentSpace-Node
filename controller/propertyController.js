@@ -267,7 +267,7 @@ module.exports = {
         totalHotels: 5, // hardcoded for now to get 5 hotels only from Dump
       });
 
-      // console.log("New Hotels Length : ", typeof(newRHHotels));
+      console.log("New ratehawk Hotels Length : ", typeof(newRHHotels));
 
       if (newRHHotels?.final_hotels?.length !== 0) {
         AllApiHotels = newRHHotels.final_hotels;
