@@ -381,6 +381,8 @@ module.exports = {
         propertyType,
         paymentMethods,
         rooms,
+        maxOccupancy,
+        phantomWalletID
       } = req.body;
 
       console.log(req.body);
@@ -416,6 +418,14 @@ module.exports = {
       }
       if (rooms) {
         updateFields.rooms = rooms;
+      }
+
+      if (maxOccupancy) {
+        updateFields.maxOccupancy = maxOccupancy;
+      }
+
+      if (phantomWalletID) {
+        updateFields.phantomWalletID = phantomWalletID;
       }
 
       const finalData = {
