@@ -95,7 +95,8 @@ const Property = sequelize.define("Property", {
         "ckEth",
         "gPay",
         "applePay",
-        "creditCard"
+        "creditCard",
+        "paypal"
       )
     ),
     defaultValue: ["ICP", "creditCard"],
@@ -103,6 +104,14 @@ const Property = sequelize.define("Property", {
   phantomWalletID: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  payPalId: {
+    type: DataTypes.STRING,
+    defaultValue: "",
+  },
+  payPalSecret: {
+    type: DataTypes.STRING,
+    defaultValue: "",
   },
   availableFrom: {
     type: DataTypes.DATE,

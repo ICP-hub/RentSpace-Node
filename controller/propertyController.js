@@ -30,6 +30,8 @@ module.exports = {
         propertyType,
         paymentMethods,
         phantomWalletID,
+        payPalId,
+        payPalSecret,
       } = req.body;
 
       console.log("Rooms => ",req.body);
@@ -143,6 +145,8 @@ module.exports = {
         propertyType,
         paymentMethods,
         phantomWalletID,
+        payPalId,
+        payPalSecret,
         availableFrom: currentDate,
         availableTill: oneMonthAfterDate,
         createdAt: currentDate,
@@ -528,7 +532,8 @@ console.log(motokoResponse);
 
   async getLikesOnProperty(req, res) {
     try {
-      const propertyId = req.query.propertyId;
+      const propertyId = req.params.propertyId;
+      console.log("propertyId to get reel likes: ", propertyId);
       const property = await Property.findOne({ where: { propertyId } });
 
       if (!property) {
