@@ -91,6 +91,8 @@ module.exports = {
         roomPrice: rooms[0].roomPrice,
       };
 
+      console.log("roomData : ", roomData);
+
       const propertyId = await req.hotelCanister.createHotel(hotelData, roomData);
 
       // ----------------------------------------
@@ -386,7 +388,9 @@ module.exports = {
         paymentMethods,
         rooms,
         maxOccupancy,
-        phantomWalletID
+        phantomWalletID,
+        payPalId,
+        payPalSecret,
       } = req.body;
 
       console.log(req.body);
@@ -430,6 +434,11 @@ module.exports = {
 
       if (phantomWalletID) {
         updateFields.phantomWalletID = phantomWalletID;
+      }
+
+      if (payPalId && payPalSecret) {
+        updateFields.payPalId = payPalId;
+        updateFields.payPalSecret = payPalSecret;
       }
 
       const finalData = {
