@@ -2,6 +2,8 @@ const { DataTypes, ARRAY, ENUM } = require("sequelize");
 const sequelize = require("../database"); 
 const { emit } = require("nodemon");
 
+// this file is made for ratehawk
+
 const Bookings = sequelize.define("Booking", {
 
     // bookingID : {
