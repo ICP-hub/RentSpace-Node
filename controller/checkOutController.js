@@ -49,7 +49,7 @@ module.exports = {
       const checkOutRecords = await CheckOut.findAll();
 
       if (checkOutRecords.length === 0) {
-        console.log("No checkOut records found");
+        // console.log("No checkOut records found");
         return;
       } else {
         const currentDate = new Date();
