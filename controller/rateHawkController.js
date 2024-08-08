@@ -75,7 +75,7 @@ function fetchHotelsFromPythonScript(latitude, longitude, totalHotels) {
         }
         try {
           console.log("Stdout = ", typeof(stdout.length));
-          console.log("StdoutOO = ", stdout);
+          console.log("StdoutOO = ", stdout.slice(0, 100));
 
           const hotels = JSON.parse(stdout);
 
