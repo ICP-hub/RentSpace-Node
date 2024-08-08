@@ -125,7 +125,7 @@ if __name__ == "__main__":
     #relative_path = os.path.join(current_directory, "controller", "partner_feed_en_v3.jsonl.zst") # for local testing
     relative_path = os.path.join(current_directory, "partner_feed_en_v3.jsonl.zst") # for production
 
-    print("Relative Path: ", relative_path)
+    # print("Relative Path: ", relative_path) # do not print this in production code
 
     # Retrieve latitude, longitude, and total hotels from command-line arguments
     if len(sys.argv) != 4:
