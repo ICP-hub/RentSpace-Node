@@ -59,7 +59,8 @@ function fetchHotelsFromPythonScript(latitude, longitude, totalHotels) {
       console.log("Longitude:", longitude);
       console.log("Total Hotels:", totalHotels);
 
-      const command = `python "${pythonScriptPath}" ${latitude} ${longitude} ${totalHotels}`;
+      // const command = `python "${pythonScriptPath}" ${latitude} ${longitude} ${totalHotels}`;
+      const command = `python3 "${pythonScriptPath}" ${latitude} ${longitude} ${totalHotels}`;
 
       console.log("Command:", command);
 
