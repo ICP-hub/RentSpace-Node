@@ -122,9 +122,10 @@ if __name__ == "__main__":
 
     # print("Current Working Directory " , current_directory)
 
-    relative_path = os.path.join(current_directory, "controller", "partner_feed_en_v3.jsonl.zst")
+    #relative_path = os.path.join(current_directory, "controller", "partner_feed_en_v3.jsonl.zst") # for local testing
+    relative_path = os.path.join(current_directory, "partner_feed_en_v3.jsonl.zst") # for production
 
-    # print("Relative Path: ", relative_path)
+    print("Relative Path: ", relative_path)
 
     # Retrieve latitude, longitude, and total hotels from command-line arguments
     if len(sys.argv) != 4:
@@ -141,7 +142,9 @@ if __name__ == "__main__":
 
     radius_km = 10  # Radius in kilometers
 
-    loop = asyncio.get_event_loop()
+    # loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     d = Decoder(semaphore_value=10, target_latitude=target_latitude,
                 target_longitude=target_longitude, radius_km=radius_km)
     
