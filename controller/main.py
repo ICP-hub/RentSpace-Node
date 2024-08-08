@@ -146,6 +146,6 @@ if __name__ == "__main__":
                 target_longitude=target_longitude, radius_km=radius_km)
     
     # Replace the file path with the path to the JSONL.ZST file
-    loop.run_until_complete(d.run(r"C:\Users\Rajnish Tripathi\Desktop\QUADB\NODE\RentSpace-Node\controller\partner_feed_en_v3.jsonl.zst")) 
-    # loop.run_until_complete(d.run(relative_path)) 
+    # loop.run_until_complete(d.run(r"C:\Users\Rajnish Tripathi\Desktop\QUADB\NODE\RentSpace-Node\controller\partner_feed_en_v3.jsonl.zst")) 
+    loop.run_until_complete(d.run(relative_path)) 
     
