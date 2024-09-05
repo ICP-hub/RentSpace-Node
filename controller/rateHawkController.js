@@ -52,15 +52,16 @@ function fetchHotelsFromPythonScript(latitude, longitude, totalHotels) {
       totalHotels === "0"
     ) {
       console.error("Latitude, Longitude or Total Hotels not provided");
-      reject("Latitude, Longitude or Total Hotels not provided");
+      // reject("Latitude, Longitude or Total Hotels not provided");
+      resolve("Latitude, Longitude or Total Hotels not provided");
       return;
     } else {
       console.log("Latitude:", latitude);
       console.log("Longitude:", longitude);
       console.log("Total Hotels:", totalHotels);
 
-      // const command = `python "${pythonScriptPath}" ${latitude} ${longitude} ${totalHotels}`;
-      const command = `python3 "${pythonScriptPath}" ${latitude} ${longitude} ${totalHotels}`;
+      const command = `python "${pythonScriptPath}" ${latitude} ${longitude} ${totalHotels}`; // for local testing
+      // const command = `python3 "${pythonScriptPath}" ${latitude} ${longitude} ${totalHotels}`; // for production
 
       console.log("Command:", command);
 
@@ -127,10 +128,10 @@ module.exports = {
 
   // function to get hash for sample hotel
   async getHashForSampleHotel(req, res) {
-    const { checkInDate, checkOutDate, adults, children } = req.body;
+    const { hotelId, checkInDate, checkOutDate, adults, children } = req.body;
 
     const postData = {
-      id: "test_hotel",
+      id: hotelId,
       checkin: checkInDate,
       checkout: checkOutDate,
       language: "en",
@@ -433,10 +434,12 @@ module.exports = {
           const payment_type = [];
 
           response.data.data.payment_types.forEach((item) => {
-            if (item.currency_code === "USD") {
+            if (item.currency_code === "EUR") {
               payment_type.push(item);
             }
           });
+
+          console.log("Payment Type:", payment_type);
 
           res.json({
             status: true,
@@ -559,7 +562,7 @@ module.exports = {
         })
         .catch((error) => {
           console.error("Error:", error.message);
-          res.json({ status: false, msg: error.message });
+          res.json({ status: false, mssg: error.message });
         });
     } catch (error) {
       console.error("Error:", error.message);

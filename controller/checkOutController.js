@@ -74,7 +74,7 @@ module.exports = {
 
           if (checkOutDate < currentDate) {
             //------------------ Change this to  /// checkOutDate < currentDate \\\ ------------------
-            console.log("CheckOut Date is less than current date : ", i);
+            // console.log("CheckOut Date is less than current date : ", i);
 
             const property = await Property.findOne({
               where: { propertyId: checkOutRecords[i].dataValues.propertyId },

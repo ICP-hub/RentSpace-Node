@@ -7,6 +7,7 @@ const { isEmpty } = require("underscore");
 const crypto = require("crypto");
 
 const { searchHotel, searchRatehawkHotels } = require("./rateHawkController");
+const e = require("cors");
 
 module.exports = {
   async createProperty(req, res) {
@@ -34,7 +35,7 @@ module.exports = {
         payPalSecret,
       } = req.body;
 
-      console.log("Rooms => ",req.body);
+      console.log("Rooms => ", req.body);
 
       // const hashTxt = principal + String(latitude) + String(longitude);
       // console.log(hashTxt);
@@ -75,7 +76,7 @@ module.exports = {
 
       // motoko integration
       const hotelData = {
-        hotelId : "",
+        hotelId: "",
         hotelTitle: propertyName,
         hotelDes: propertyDescription,
         hotelImage: imageList[0],
@@ -85,7 +86,6 @@ module.exports = {
         createdAt: currentDate.toDateString(),
       };
 
-
       const roomData = {
         roomType: rooms[0].roomType,
         roomPrice: rooms[0].roomPrice,
@@ -93,7 +93,10 @@ module.exports = {
 
       console.log("roomData : ", roomData);
 
-      const propertyId = await req.hotelCanister.createHotel(hotelData, roomData);
+      const propertyId = await req.hotelCanister.createHotel(
+        hotelData,
+        roomData
+      );
 
       // ----------------------------------------
 
@@ -110,7 +113,6 @@ module.exports = {
       // if (!propertyIDCheck) {
       // console.log("date : ", currentDate);
       // console.log("oneMonthAfter : ", oneMonthAfterDate);
-
 
       let newPropertyID = propertyId?.ok?.split(" ");
 
@@ -205,13 +207,15 @@ module.exports = {
         ((Number(radius) / appConstant.EARTH_RADIUS_IN_KM) * (180 / Math.PI)) /
         Math.cos((latitude * Math.PI) / 180);
 
-      if (latitude && longitude) {
-        conditions.latitude = {
-          [Op.between]: [+latitude - latBoundary, latitude + latBoundary],
-        };
-        conditions.longitude = {
-          [Op.between]: [+longitude - lonBoundary, longitude + lonBoundary],
-        };
+      if (name == "") {
+        if (latitude && longitude && latitude != "0" && longitude != "0") {
+          conditions.latitude = {
+            [Op.between]: [+latitude - latBoundary, latitude + latBoundary],
+          };
+          conditions.longitude = {
+            [Op.between]: [+longitude - lonBoundary, longitude + lonBoundary],
+          };
+        }
       }
 
       if (name) {
@@ -232,13 +236,16 @@ module.exports = {
       if (propertyType) {
         conditions.propertyType = propertyType;
       }
+
       if (amenities && amenities.length > 0) {
         const amenitiesArray = amenities.split(",");
-        // console.log("req amen : ", requestedAmenities);
+        console.log("req amen : ", amenitiesArray); // Changed to amenitiesArray
         conditions.amenities = {
-          [Op.overlap]: [...requestedAmenities],
+          [Op.overlap]: [...amenitiesArray], // Changed to amenitiesArray
         };
       }
+      
+      // -------------------------------------
 
       // if (currentDate) {
       //   conditions.availableFrom = {
@@ -273,11 +280,19 @@ module.exports = {
         totalHotels: 5, // hardcoded for now to get 5 hotels only from Dump
       });
 
-      console.log("New ratehawk Hotels Length : ", typeof(newRHHotels));
+      console.log("filteredPropertiesDB : ", filteredPropertiesDB.length);
+      console.log("New ratehawk Hotels Length : ", typeof newRHHotels);
 
-      if (newRHHotels?.final_hotels?.length !== 0) {
+      if (
+        typeof newRHHotels === "object" &&
+        newRHHotels?.final_hotels?.length !== 0
+      ) {
+        // if (newRHHotels?.final_hotels?.length !== 0) {
         AllApiHotels = newRHHotels.final_hotels;
         AllApiHotelsIDs = newRHHotels.final_hotels_Id;
+      } else {
+        AllApiHotels = [];
+        AllApiHotelsIDs = [];
       }
 
       // searching hotels from RateHawk API baswd on location
@@ -467,7 +482,7 @@ module.exports = {
             ? finalData.propertyDescription
             : property.propertyDescription,
           hotelImage:
-          finalData.imageList?.length > 0
+            finalData.imageList?.length > 0
               ? finalData.imageList[0]
               : property.imageList[0],
           hotelLocation: finalData.location
@@ -481,10 +496,13 @@ module.exports = {
         const roomData = {
           roomType: finalData.rooms[0].roomType,
           roomPrice: Number(finalData.rooms[0].roomPrice),
-        }
+        };
 
-        const motokoResponse = await req.hotelCanister.updateHotel(hotelData, roomData);
-console.log(motokoResponse);
+        const motokoResponse = await req.hotelCanister.updateHotel(
+          hotelData,
+          roomData
+        );
+        console.log(motokoResponse);
 
         await Property.update(finalData, { where: { propertyId } });
 
